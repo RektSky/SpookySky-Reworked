@@ -21,7 +21,7 @@ dependencies {
     implementation("org.ow2.asm:asm-util:9.3")
     implementation("org.ow2.asm:asm:9.3")
 }
-var clientJar = File(rootProject.project(":client").buildDir, "/libs/client-jvm-${project.version}.jar")
+var clientJar = File(rootProject.project(":client").buildDir, "/libs/client-${project.version}-all.jar")
 
 tasks.jar {
     dependsOn(":client:build")
@@ -71,7 +71,7 @@ val runInjector by tasks.register<JavaExec>("run") {
     group = "run configurations"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("ml.rektsky.spookysky.Main")
-    args(clientJar)
+    args(clientJar.absolutePath)
 }
 
 

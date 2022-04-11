@@ -1,17 +1,24 @@
 package ml.rektsky.spookysky
 
+import ml.rektsky.spookysky.asm.CustomClassWriter
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FieldInsnNode
 import org.objectweb.asm.tree.InsnList
+import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.LdcInsnNode
 import sun.jvmstat.monitor.HostIdentifier
 import sun.jvmstat.monitor.MonitoredHost
 import sun.jvmstat.monitor.MonitoredVmUtil
 import sun.jvmstat.monitor.VmIdentifier
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.nio.charset.Charset
+import java.nio.file.Files
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -34,8 +41,17 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        Main.javaClass.classLoader.getResource(".")
-        Main.javaClass.classLoader.getResourceAsStream("agent.jar")
+        var agent: ZipInputStream? = null
+        if (args.isEmpty()) {
+            for (resource in Main.javaClass.classLoader.getResources("")) {
+                if (resource.file.endsWith(".jar")) {
+                    agent = ZipInputStream(Main.javaClass.classLoader.getResourceAsStream(resource.file))
+                }
+            }
+        } else {
+            agent = ZipInputStream(FileInputStream(args[0]))
+        }
+
 
         JOptionPane.showConfirmDialog(null, text,
             "SpookySky Injector", JOptionPane.CLOSED_OPTION, JOptionPane.PLAIN_MESSAGE)
@@ -52,14 +68,17 @@ object Main {
                 continue
             }
             println("Found Minecraft! Killing it...")
+            val cwdRetriever = Runtime.getRuntime().exec("readlink -e /proc/$pid/cwd")
+            var workingDir: File? = null
             if (windowsFlag) {
                 Runtime.getRuntime().exec("TASKKILL /F /PID $pid").waitFor()
             } else {
                 Runtime.getRuntime().exec("kill -9 $pid").waitFor()
+                workingDir = File(cwdRetriever.inputStream.readBytes().toString(Charset.defaultCharset()).split("\n")[0])
             }
+            workingDir!!
             println("Killed! Detecting JVM information...")
             val classPath = ArrayList<String>((vm.findByName("java.property.java.class.path").value as String).split(":"))
-            val workingDir = File((vm.findByName("java.property.user.dir").value as String))
             val javaHome = File((vm.findByName("java.property.java.home").value as String))
             println("Minecraft ClassPath: $classPath")
             println("Minecraft JavaHome: $javaHome")
@@ -88,43 +107,67 @@ object Main {
                 exitProcess(-1)
             }
             println("Injecting...")
-            val tempJar = File(System.getProperty("java.io.tmpdir"), "/injection-" + UUID.randomUUID() + ".jar")
             val zipInputStream = ZipInputStream(FileInputStream(injectableTarget))
-            val zipOutputStream = ZipOutputStream(FileOutputStream(tempJar))
-            var entry = zipInputStream.nextEntry
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            val zipOutputStream = ZipOutputStream(byteArrayOutputStream)
+            var entry = agent!!.nextEntry
             while (entry != null) {
                 zipOutputStream.putNextEntry(ZipEntry(entry.name))
-                if (entry.name == "com/google/gson/Gson.class") {
-                    var classNode = ClassNode()
-                    var reader = ClassReader(zipInputStream.readBytes())
-                    reader.accept(classNode, 0)
-                    val targetMethod = classNode.methods.filter { node -> node.name == "<clinit>" }.first()
-                    println("Found injection method! Injecting SpookySky into it...")
-                    var started = false
-                    var newList = InsnList()
-
-                    for (instruction in targetMethod.instructions) {
-                        if (instruction is LdcInsnNode) {
-                            if (instruction.cst == gsonInjectionStart) {
-                                started = true
-                                println("Previous SpookySky that's injected into SpookySky has been detected! Removing...")
-                            } else if (instruction.cst == gsonInjectionEnd) {
-                                started = false
-                            } else if (started) {} else {
-                                newList.add(instruction)
-                            }
-                        }
-                    }
-                    println("Successfully injected SpookySky to target method!")
-                    var writer = ClassWriter(ClassWriter.COMPUTE_FRAMES)
-                }
+                zipOutputStream.write(agent.readBytes())
                 zipOutputStream.closeEntry()
+                agent.closeEntry()
+                entry = agent.nextEntry
+            }
+            agent.close()
+            entry = zipInputStream.nextEntry
+            while (entry != null) {
+                if (!entry.name.startsWith("ml/rektsky/spookysky/")) {
+                    try {
+                        zipOutputStream.putNextEntry(ZipEntry(entry.name))
+                        var output = zipInputStream.readBytes()
+                        if (entry.name == "com/google/gson/Gson.class") {
+                            var classNode = ClassNode()
+                            var reader = ClassReader(output)
+                            reader.accept(classNode, 0)
+                            val targetMethod = classNode.methods.filter { node -> node.name == "<clinit>" }.first()
+                            println("Found injection method! Injecting SpookySky into it...")
+                            var started = false
+                            var newList = InsnList()
+                            newList.add(LdcInsnNode(gsonInjectionStart))
+                            newList.add(FieldInsnNode(Opcodes.GETSTATIC, "ml/rektsky/spookysky/Client", "INSTANCE", "Lml/rektsky/spookysky/Client;"))
+                            newList.add(InsnNode(Opcodes.POP))
+                            newList.add(LdcInsnNode(gsonInjectionEnd))
+                            for (instruction in targetMethod.instructions) {
+                                if (instruction is LdcInsnNode) {
+                                    if (instruction.cst == gsonInjectionStart) {
+                                        started = true
+                                        println("Previous SpookySky that's injected into SpookySky has been detected! Removing...")
+                                    } else if (instruction.cst == gsonInjectionEnd) {
+                                        started = false
+                                    } else if (started) {} else {
+                                        newList.add(instruction)
+                                    }
+                                }
+                            }
+                            targetMethod.instructions = newList
+                            println("Successfully injected SpookySky to target method!")
+                            var writer = CustomClassWriter()
+                            classNode.accept(writer)
+                            output = writer.toByteArray()
+                        }
+                        zipOutputStream.write(output)
+                        zipOutputStream.closeEntry()
+                    } catch (e: Exception) {}
+                }
                 zipInputStream.closeEntry()
                 entry = zipInputStream.nextEntry
             }
             zipInputStream.close()
             zipOutputStream.close()
-            println("Previous ")
+            println("Successfully injected! Launching Minecraft...")
+            injectableTarget.writeBytes(byteArrayOutputStream.toByteArray())
+            TODO("Launch the Minecraft again")
+            return
         }
 
     }
