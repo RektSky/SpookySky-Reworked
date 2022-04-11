@@ -166,7 +166,6 @@ object Main {
             zipOutputStream.close()
             println("Successfully injected! Launching Minecraft...")
             injectableTarget.writeBytes(byteArrayOutputStream.toByteArray())
-            TODO("Launch the Minecraft again")
             return
         }
 
