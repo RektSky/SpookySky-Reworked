@@ -46,5 +46,10 @@
       <option name="name" value="maven2" />
       <option name="url" value="https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="BintrayJCenter" />
+      <option name="name" value="BintrayJCenter" />
+      <option name="url" value="https://jcenter.bintray.com/" />
+    </remote-repository>
   </component>
 </project>

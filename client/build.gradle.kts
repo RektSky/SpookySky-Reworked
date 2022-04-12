@@ -16,6 +16,7 @@ apply<SpookySkyCommon>()
 
 repositories {
     mavenCentral()
+    jcenter()
     maven {
         url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
     }
@@ -44,7 +45,7 @@ kotlin {
         }
         val jsMain by getting {
             dependencies {
-
+                implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.5")
                 // Ktor
             }
         }

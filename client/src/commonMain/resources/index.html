@@ -11,6 +11,12 @@
 
             color: white;
             font-family: 'Source Code Pro', monospace;
+
+            /*Skid, ty*/
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standard */
         }
         body {
             background: #1C1C1C;
@@ -112,13 +118,19 @@
 
         .module {
             background: #303030;
-            padding: 2vh 40px;
             border-radius: 14px;
+            overflow: hidden;
+            position: relative;
         }
 
         .module-title {
             display: flex;
             align-items: center;
+            height: 4vh;
+            width: 100%;
+            background-color: #303030;
+            z-index: 1;
+            margin: 2vh 4vw;
         }
 
         .module * {
@@ -139,40 +151,47 @@
 
         .module h3 {
             position: absolute;
-            right: 10vw;
+            right: 5vw;
             font-size: 0.85vw;
         }
 
         .module .enabled {
             color: #85FF72;
+            transition-duration: 0.2s;
         }
 
         .module .disabled {
             color: #FF7272;
+            transition-duration: 0.2s;
         }
 
         .module .arrow {
             position: absolute;
-            right: 6vw;
-            transform: scale(1);
+            right: 3vw;
+            transition-duration: 0.2s;
         }
 
+
         .settings {
-            margin-top: 5vh;
-            padding-left: 2.5vw;
+            width: 61.9vw;
             margin-bottom: 4vh;
+            background-color: #303030;
+            z-index: -100;
+            padding-top: 3vh;
+            padding-left: 6.5vw;
+            transition-duration: 0.3s;
         }
 
         .setting {
             display: flex;
-            margin-top: 4.5vh;
+            margin-bottom: 4.5vh;
             font-size: 1vw;
             align-items: center;
         }
 
         .setting .setting-input {
             position: absolute;
-            left: 23.2vw;
+            left: 22.8vw;
             transition-duration: 0.15s;
             transition: ease-in;
         }
@@ -185,15 +204,18 @@
             border-radius: 3vh;
             padding-top: 0.6vh;
             overflow: hidden;
+            transition-duration: 0.2s;
         }
 
         .number-setting:before {
             -webkit-appearance: none;
             margin-left: 1vw;
-            content: attr(value);
+            content: attr(value-display);
             overflow: hidden;
             z-index: 2;
             position: absolute;
+            font-size: 0.8vw;
+            transition-duration: 0.2s;
         }
 
         .number-setting::-webkit-slider-thumb {
@@ -203,6 +225,7 @@
             -webkit-appearance: none;
             z-index: 1;
             box-shadow: -30000px 0 0 30000px #5790FF;
+            transition-duration: 0.2s;
         }
 
         .setting .boolean-setting {
@@ -256,12 +279,17 @@
             outline: none;
         }
 
+        .expanded-arrow {
+            transform: rotate(-90deg);
+        }
+
     </style>
     <script>
         addEventListener("load", ev => {
             setInterval(() => {
-                for (let ele of document.getElementsByClassName("arrow")) {
-                    ele.style.transform = "scale(" + (window.innerWidth/1920) + ")"
+                for (let ele of document.getElementsByClassName("number-setting")) {
+                    ele.setAttribute("value-display", ele.value)
+                    // ele.style.transform = "scale(" + (window.innerWidth/1920) + ")"
                 }
             })
             document.addEventListener("click", ev => {
@@ -279,11 +307,17 @@
             document.addEventListener('contextmenu', event => {
                 event.preventDefault()
                 for (let eventTarget of event.path) {
-                    console.log("Got Target: " +eventTarget.className)
                     if (eventTarget.className === "module") {
                         for (let child of eventTarget.children) {
-                            if (child.className == "settings") {
+                            if (child.className === "settings") {
                                 child.hidden = !child.hidden
+                            }
+                            if (child.getElementsByClassName("arrow")[0] !== undefined) {
+                                if (child.getElementsByClassName("arrow")[0].classList.contains("expanded-arrow")) {
+                                    child.getElementsByClassName("arrow")[0].classList.remove("expanded-arrow")
+                                } else {
+                                    child.getElementsByClassName("arrow")[0].classList.add("expanded-arrow")
+                                }
                             }
                         }
                     }
@@ -313,7 +347,7 @@
 
 
         <div id="right">
-            <div class="module" module-name="KillAura">
+            <div class="module" module-name="KillAura" hidden>
                 <div class="module-title">
                     <h1>ModuleName</h1>
                     <h2>Your description here!</h2>
@@ -325,7 +359,7 @@
                 <div class="settings" hidden>
                     <div class="setting" setting="Setting 1">
                         <p>Range</p>
-                        <input type="range"value="hi" class="setting-input number-setting"></input>
+                        <input type="range"value="hi" class="setting-input number-setting">
                     </div>
                     <div class="setting" setting="Setting 2">
                         <p>Raytrace</p>
@@ -335,7 +369,6 @@
                         <p>KeyBind</p>
                         <input type="text" class="setting-input keybind-setting">
                     </div>
-
                 </div>
             </div>
         </div>
