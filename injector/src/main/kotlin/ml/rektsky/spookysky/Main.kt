@@ -2,13 +2,8 @@ package ml.rektsky.spookysky
 
 import ml.rektsky.spookysky.asm.CustomClassWriter
 import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.FieldInsnNode
-import org.objectweb.asm.tree.InsnList
-import org.objectweb.asm.tree.InsnNode
-import org.objectweb.asm.tree.LdcInsnNode
+import org.objectweb.asm.tree.*
 import sun.jvmstat.monitor.HostIdentifier
 import sun.jvmstat.monitor.MonitoredHost
 import sun.jvmstat.monitor.MonitoredVmUtil
@@ -16,15 +11,13 @@ import sun.jvmstat.monitor.VmIdentifier
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.net.ServerSocket
 import java.nio.charset.Charset
-import java.nio.file.Files
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.swing.JOptionPane
-import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 
@@ -35,7 +28,19 @@ object Main {
 
     const val text = "Thanks for using SpookySky! You can start Minecraft now.\n" +
             "After pressing OK, It will restart your minecraft in order to do screen-sharing bypass\n" +
-            "WARNING: Don't close it until the minecraft has been launched."
+            "If anything broke after using it, please delete the .minecraft/libraries directory, or\n" +
+            "if you are running lunar client: <user home>/.lunarclient/1.8/offline/lunar-libs.jar.\n" +
+            "If it still doesn't work, please contact the Developer of SpookySky!\n" +
+            "\n" +
+            "Status:\n" +
+            "[WORKING ] Screensharing Bypass\n" +
+            "[WORKING ] Linux Support\n" +
+            "[UPDATING] Windows Support\n" +
+            "\n" +
+            "\n" +
+            "WARNING: Currently, it only works on Linux\n" +
+            "WARNING: Don't close it until the minecraft has been launched.\n" +
+            "WARNING: It's gonna use port 6930 and 6931 as communication port, and 8040 as Web GUI port."
 
     val windowsFlag = System.getProperty("os.name").lowercase(Locale.ENGLISH).contains("windows")
 
@@ -67,6 +72,7 @@ object Main {
             if ("-accessToken" !in mainArgs) {
                 continue
             }
+            println("Command Line: ${MonitoredVmUtil.commandLine(vm)}")
             println("Found Minecraft! Killing it...")
             val cwdRetriever = Runtime.getRuntime().exec("readlink -e /proc/$pid/cwd")
             var workingDir: File? = null
@@ -92,10 +98,15 @@ object Main {
                 } else {
                     file = File(workingDir, s)
                 }
-                if (hasGson(file)) {
-                    println("Injectable ClassPath Detected: ${file.absolutePath}")
-                    injectableTarget = file
-                    break
+                println("Found ClassPath: ${file.absolutePath}")
+                try {
+                    if (hasGson(file)) {
+                        println("Injectable ClassPath Detected: ${file.absolutePath}")
+                        injectableTarget = file
+                        break
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
             if (injectableTarget == null) {
@@ -164,9 +175,74 @@ object Main {
             }
             zipInputStream.close()
             zipOutputStream.close()
-            println("Successfully injected! Launching Minecraft...")
             injectableTarget.writeBytes(byteArrayOutputStream.toByteArray())
-            return
+            println("Successfully injected! Launching Minecraft...")
+            val socket = ServerSocket(6931)
+            val builder = ProcessBuilder()
+            builder.command(File(javaHome, "bin/java").absolutePath,
+                *jvmArgs.replace("-XX:+DisableAttachMechanism", "").split(" ").toTypedArray(),
+                "-cp", classPath.joinToString(":"),
+                MonitoredVmUtil.mainClass(vm, true),
+                *mainArgs.split(" ").toTypedArray()
+            )
+            builder.directory(workingDir)
+            for (s in builder.command()) {
+                print("$s ")
+            }
+            print("\n")
+            var process = builder.start()
+            val thread = Thread {
+                val scanner = Scanner(process.inputStream)
+                while (scanner.hasNextLine()) {
+                    println(scanner.nextLine())
+                }
+                try {
+                    process.waitFor()
+                } catch (ignored: InterruptedException) {
+                }
+                println("Process exited with code " + process.exitValue())
+            }
+            val threadE = Thread {
+                val scanner = Scanner(process.errorStream)
+                while (scanner.hasNextLine()) {
+                    println(scanner.nextLine())
+                }
+                try {
+                    process.waitFor()
+                } catch (ignored: InterruptedException) {
+                }
+            }
+            thread.start()
+            threadE.start()
+            val startTime = System.currentTimeMillis()
+            var thread1 = Thread {
+                try {
+                    while (true) {
+                        if (System.currentTimeMillis() > startTime + 60000) {
+                            JOptionPane.showConfirmDialog(
+                                null, "Failed to inject!\n" +
+                                        "If you can't even launch the game normally, please delete \n" +
+                                        "${injectableTarget.absolutePath}\n" +
+                                        "If any error shows up after deleting it, please reinstall the Minecraft client.\n" +
+                                        "If you want to submit a bug report, please include these following information:\n" +
+                                        " - Client Name\n" +
+                                        " - Injector Version\n",
+                                "SpookySky Injector", JOptionPane.CLOSED_OPTION, JOptionPane.ERROR_MESSAGE
+                            )
+                            exitProcess(-1)
+                        }
+                        Thread.sleep(100)
+                    }
+                } catch (ignored: Exception) {}
+            }
+            thread1.start()
+            socket.accept()
+            JOptionPane.showConfirmDialog(null, "Successfully injected into Minecraft!\n" +
+                    "If the client doesn't work, then it probably means that it doesn't support the Minecraft " +
+                    "client you've launched.",
+                "SpookySky Injector", JOptionPane.CLOSED_OPTION, JOptionPane.INFORMATION_MESSAGE)
+            socket.close()
+            thread1.stop()
         }
 
     }

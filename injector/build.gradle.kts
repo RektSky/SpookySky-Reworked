@@ -46,7 +46,7 @@ val runLunar by tasks.register<JavaExec>("runLunar") {
         "-Djna.boot.library.path=natives",
         "-Dlog4j2.formatMsgNoLookups=true",
         "-Djava.library.path=natives",
-//        "-XX:+DisableAttachMechanism",
+        "-XX:+DisableAttachMechanism",
         "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=6950",
     )
 

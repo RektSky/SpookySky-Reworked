@@ -1,0 +1,346 @@
+<html>
+<head>
+    <title>SpookySky</title>
+    <script type="text/javascript" src="client.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Risque&family=Source+Code+Pro:wght@300;400;500&display=swap');
+
+        * {
+            padding: 0;
+            margin: 0;
+
+            color: white;
+            font-family: 'Source Code Pro', monospace;
+        }
+        body {
+            background: #1C1C1C;
+            height: 100%;
+            width: 100%;
+        }
+
+        #left #title {
+            font-family: 'Risque', cursive;
+            font-size: 2.6vw;
+            font-weight: lighter;
+            margin-top: 14%;
+            left: 50%;
+            text-align: center;
+            margin-bottom: 3%;
+        }
+
+        #left #credits {
+            font-size: 0.9vw;
+            position: relative;
+            font-weight: lighter;
+            margin-left: 30%;
+            margin-bottom: 4%;
+        }
+
+        #left {
+            width: 16%;
+            position: absolute;
+            left: 2%;
+            top: 3%;
+            bottom: 3%;
+            display: inline-flex;
+            flex-direction: column;
+
+            border-radius: 26px;
+            box-shadow: 4px 4px 14px 2px rgba(0, 0, 0, 15%);
+
+            border: solid 2px transparent;
+            background: linear-gradient(#232323, #232323) padding-box,
+            linear-gradient(135deg, #56FFF5, #801EFE) border-box;
+        }
+
+        #left hr {
+            margin: 3vh 20%;
+            border: 1px solid #4F4F4F;
+        }
+
+        #categories {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clickable-category-button {
+            margin: 0.65vw 3vw;
+            font-size: 1.3vw;
+            transition-duration: 0.15s;
+            color: white;
+        }
+
+        .clickable-category-button:visited {
+            color: inherit;
+        }
+
+        .clickable-category-button-selected {
+            color: #3D96FF;
+        }
+
+        .clickable-category-button:hover {
+            color: #81A4FF;
+        }
+
+        #client-settings {
+            position: absolute;
+            bottom: 3%;
+        }
+
+
+
+        #right {
+            width: 75%;
+            position: absolute;
+            right: 2%;
+            top: 3%;
+            bottom: 3%;
+            display: inline-flex;
+            flex-direction: column;
+
+            border-radius: 26px;
+            box-shadow: 4px 4px 14px 2px rgba(0, 0, 0, 15%);
+
+            border: solid 2px transparent;
+            background: linear-gradient(#232323, #232323) padding-box,
+            linear-gradient(135deg, #55FFF5, #FF4C25) border-box;
+
+            box-sizing: border-box;
+
+            padding: 3% 3.2%;
+        }
+
+        .module {
+            background: #303030;
+            padding: 2vh 40px;
+            border-radius: 14px;
+        }
+
+        .module-title {
+            display: flex;
+            align-items: center;
+        }
+
+        .module * {
+            font-weight: normal;
+        }
+
+        .module h1 {
+            font-size: 1.3vw;
+            color: #FFE4CB;
+        }
+
+        .module h2 {
+            position: absolute;
+            left: 23vw;
+            font-size: 1vw;
+            color: #9D9D9D;
+        }
+
+        .module h3 {
+            position: absolute;
+            right: 10vw;
+            font-size: 0.85vw;
+        }
+
+        .module .enabled {
+            color: #85FF72;
+        }
+
+        .module .disabled {
+            color: #FF7272;
+        }
+
+        .module .arrow {
+            position: absolute;
+            right: 6vw;
+            transform: scale(1);
+        }
+
+        .settings {
+            margin-top: 5vh;
+            padding-left: 2.5vw;
+            margin-bottom: 4vh;
+        }
+
+        .setting {
+            display: flex;
+            margin-top: 4.5vh;
+            font-size: 1vw;
+            align-items: center;
+        }
+
+        .setting .setting-input {
+            position: absolute;
+            left: 23.2vw;
+            transition-duration: 0.15s;
+            transition: ease-in;
+        }
+
+        .setting .number-setting {
+            -webkit-appearance: none;
+            width: 15vw;
+            height: 3vh;
+            background-color: #212121;
+            border-radius: 3vh;
+            padding-top: 0.6vh;
+            overflow: hidden;
+        }
+
+        .number-setting:before {
+            -webkit-appearance: none;
+            margin-left: 1vw;
+            content: attr(value);
+            overflow: hidden;
+            z-index: 2;
+            position: absolute;
+        }
+
+        .number-setting::-webkit-slider-thumb {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            -webkit-appearance: none;
+            z-index: 1;
+            box-shadow: -30000px 0 0 30000px #5790FF;
+        }
+
+        .setting .boolean-setting {
+            width: 7vh;
+            height: 3.5vh;
+            border-radius: 3.5vh;
+            display: block;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.3s;
+            background-color: #232323;
+
+            box-shadow: inset 4px 4px 4px rgba(0, 0, 0, 0.1),
+            inset -4px -4px 4px rgba(0, 0, 0, 0.1);
+        }
+        .setting .boolean-setting::after {
+            content: "";
+            position: relative;
+            width: 3.5vh;
+            height: 3.5vh;
+            border-radius: 3.5vh;
+            display: block;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .setting .boolean-setting-enabled::after {
+            right: -50%;
+            background-color: #5790FF;
+        }
+
+        .setting .boolean-setting-disabled::after {
+            right: 0;
+            background-color: #797979;
+        }
+
+        .setting .keybind-setting {
+            background-color: #232323;
+            width: 5vw;
+            height: 3vh;
+            border-radius: 3vh;
+            text-align: center;
+            font-size: 0.8vw;
+            box-sizing: border-box;
+            border: none;
+            outline: none;
+        }
+
+        .setting .keybind-setting:focus {
+            outline: none;
+        }
+
+    </style>
+    <script>
+        addEventListener("load", ev => {
+            setInterval(() => {
+                for (let ele of document.getElementsByClassName("arrow")) {
+                    ele.style.transform = "scale(" + (window.innerWidth/1920) + ")"
+                }
+            })
+            document.addEventListener("click", ev => {
+                let target = ev.target
+                for (let value of target.classList.values()) {
+                    if (value === "boolean-setting-disabled") {
+                        target.classList.add("boolean-setting-enabled")
+                        target.classList.remove("boolean-setting-disabled")
+                    } else if (value === "boolean-setting-enabled") {
+                        target.classList.add("boolean-setting-disabled")
+                        target.classList.remove("boolean-setting-enabled")
+                    }
+                }
+            })
+            document.addEventListener('contextmenu', event => {
+                event.preventDefault()
+                for (let eventTarget of event.path) {
+                    console.log("Got Target: " +eventTarget.className)
+                    if (eventTarget.className === "module") {
+                        for (let child of eventTarget.children) {
+                            if (child.className == "settings") {
+                                child.hidden = !child.hidden
+                            }
+                        }
+                    }
+                }
+            });
+        })
+    </script>
+</head>
+<body>
+
+    <div style="display: flex; flex-direction: row">
+        <div id="left">
+            <h1 id="title">SpookySky</h1>
+            <p id="credits">by RektSky team</p>
+            <hr>
+            <div id="categories">
+                <a class="clickable-category-button clickable-category-button-selected">Combat</a>
+                <a class="clickable-category-button">Player</a>
+                <a class="clickable-category-button">Visual</a>
+                <a class="clickable-category-button">Exploit</a>
+                <a class="clickable-category-button">Movement</a>
+                <a class="clickable-category-button">World</a>
+                <a class="clickable-category-button">Misc</a>
+            </div>
+            <a class="clickable-category-button" id="client-settings">Settings</a>
+        </div>
+
+
+        <div id="right">
+            <div class="module" module-name="KillAura">
+                <div class="module-title">
+                    <h1>ModuleName</h1>
+                    <h2>Your description here!</h2>
+                    <h3 class="enabled">Enabled</h3>
+                    <svg width="11" height="16" fill="none" class="arrow">
+                        <path d="M0 8L10.5 0.205772L10.5 15.7942L0 8Z" fill="white"/>
+                    </svg>
+                </div>
+                <div class="settings" hidden>
+                    <div class="setting" setting="Setting 1">
+                        <p>Range</p>
+                        <input type="range"value="hi" class="setting-input number-setting"></input>
+                    </div>
+                    <div class="setting" setting="Setting 2">
+                        <p>Raytrace</p>
+                        <div class="setting-input boolean-setting boolean-setting-disabled"></div>
+                    </div>
+                    <div class="setting" setting="Setting 2">
+                        <p>KeyBind</p>
+                        <input type="text" class="setting-input keybind-setting">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>

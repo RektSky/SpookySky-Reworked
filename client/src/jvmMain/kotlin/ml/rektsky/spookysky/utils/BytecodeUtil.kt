@@ -1,8 +1,10 @@
 package ml.rektsky.spookysky.utils
 
+import ml.rektsky.spookysky.Client
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.lang.instrument.Instrumentation
 import java.nio.charset.StandardCharsets
 
 
