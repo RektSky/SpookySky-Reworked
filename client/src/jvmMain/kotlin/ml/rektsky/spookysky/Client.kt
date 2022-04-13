@@ -3,18 +3,17 @@ package ml.rektsky.spookysky
 import ml.rektsky.spookysky.commands.CommandsManager
 import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.modules.ModulesManager
+import ml.rektsky.spookysky.processor.ProcessorManager
 import ml.rektsky.spookysky.utils.CustomJvmSelfAttach
 import ml.rektsky.spookysky.webgui.WebGui
 import java.io.File
-import java.io.OutputStream
-import java.io.PrintStream
 import java.lang.instrument.Instrumentation
 import java.net.Socket
-var debugRun = false
+var webGuiOnly = false
 
 object Client {
 
-
+    const val safe = true
     const val debug = true
     const val disableMinecraftLog = true
 
@@ -24,7 +23,7 @@ object Client {
         private set
 
     init {
-        if (debugRun) {
+        if (webGuiOnly) {
             debug("Loading SpookySky...")
             debug(" - Debug Run Detected!")
             init()
@@ -53,6 +52,11 @@ object Client {
         WebGui
         debug("Initializing Commands Manager...")
         CommandsManager
+        if (webGuiOnly) {
+            debug("Initializing Processor Manager...")
+            ProcessorManager
+        }
+
     }
 
 
@@ -63,6 +67,6 @@ object Client {
 
 
 fun main() {
-    debugRun = true
+    webGuiOnly = true
     Client
 }
