@@ -3,7 +3,7 @@ import ml.rektsky.spookysky.buildSrc.*
 import java.net.*
 
 val ktorVersion = "2.0.0"
-val production = false
+val production = true
 
 plugins {
     kotlin("multiplatform") version "1.6.20"

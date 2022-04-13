@@ -1,6 +1,7 @@
 package ml.rektsky.spookysky.mapping
 
 import ml.rektsky.spookysky.processor.ProcessorManager
+import kotlin.concurrent.withLock
 
 abstract class ClassMapping {
 
@@ -9,7 +10,9 @@ abstract class ClassMapping {
             field = value
             for (processor in ProcessorManager.processors) {
                 if (processor.lock.isLocked) {
-                    processor.condition.signalAll()
+                    processor.lock.withLock {
+                        processor.condition.signalAll()
+                    }
                 }
             }
         }

@@ -8,8 +8,10 @@ import ml.rektsky.spookysky.packets.PacketManager
 import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
 import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
 import ml.rektsky.spookysky.packets.impl.server.PacketServerConsoleMessage
+import ml.rektsky.spookysky.utils.ChatColor
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 import org.java_websocket.WebSocket
+import java.io.*
 import java.net.InetSocketAddress
 
 class WebGuiInstance(private val socket: WebSocket) {
@@ -22,6 +24,15 @@ class WebGuiInstance(private val socket: WebSocket) {
 
         Client.debug("[${socket.remoteSocketAddress}] Sent modules update to client!")
         sendMessage("Connected as $${getIP()}")
+
+        Thread {
+            while (true) {
+                var message = buffer.readLine()
+                if (message != null) {
+                    sendMessage(message, ChatColor.RED)
+                }
+            }
+        }.start()
     }
 
     fun send(packet: Packet) {
@@ -40,6 +51,19 @@ class WebGuiInstance(private val socket: WebSocket) {
     fun sendMessage(message: String, color: Int = 0xffffff) {
         send(PacketCommonTextMessage().apply { this.message = message})
         send(PacketServerConsoleMessage(message, color))
+    }
+
+    fun send(e: Throwable) {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        e.printStackTrace(PrintWriter(byteArrayOutputStream, true))
+        sendMessage(String(byteArrayOutputStream.toByteArray()), ChatColor.RED)
+    }
+
+    private val pipe = PipedInputStream(1024*16) // 16kb, more than enough.
+    private val buffer = BufferedReader(InputStreamReader(pipe))
+
+    fun getPrintWriter(): PrintWriter {
+        return PrintWriter(PipedOutputStream(pipe), true)
     }
 
 

@@ -11,7 +11,6 @@ import sun.jvmstat.monitor.VmIdentifier
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.io.PrintStream
 import java.net.ServerSocket
 import java.nio.charset.Charset
 import java.util.*
@@ -24,8 +23,8 @@ import kotlin.system.exitProcess
 
 object Main {
 
-    const val gsonInjectionStart = "de8dc0c0-58bc-4ebb-95bc-95cb44b90ce9"
-    const val gsonInjectionEnd = "3e9e7328-6202-431e-8ad5-e2e1dbf5b0c7"
+    const val injectionStartTag = "de8dc0c0-58bc-4ebb-95bc-95cb44b90ce9"
+    const val injectionEndTag = "3e9e7328-6202-431e-8ad5-e2e1dbf5b0c7"
 
     const val text = "Thanks for using SpookySky! You can start Minecraft now.\n" +
             "After pressing OK, It will restart your minecraft in order to do screen-sharing bypass\n" +
@@ -80,14 +79,16 @@ object Main {
             if (windowsFlag) {
                 Runtime.getRuntime().exec("TASKKILL /F /PID $pid").waitFor()
             } else {
-                Runtime.getRuntime().exec("kill -9 $pid").waitFor()
                 workingDir = File(cwdRetriever.inputStream.readBytes().toString(Charset.defaultCharset()).split("\n")[0])
+                Runtime.getRuntime().exec("kill -9 $pid").waitFor()
             }
             workingDir!!
             println("Killed! Detecting JVM information...")
             val classPath = ArrayList<String>((vm.findByName("java.property.java.class.path").value as String).split(":"))
             val javaHome = File((vm.findByName("java.property.java.home").value as String))
+            val mainClass = MonitoredVmUtil.mainClass(vm, true)
             println("Minecraft ClassPath: $classPath")
+            println("Mainclass: $mainClass")
             println("Minecraft JavaHome: $javaHome")
             println("Minecraft PWD: $workingDir")
             println("Finding injection target...")
@@ -101,7 +102,7 @@ object Main {
                 }
                 println("Found ClassPath: ${file.absolutePath}")
                 try {
-                    if (hasGson(file)) {
+                    if (isTarget(file, mainClass)) {
                         println("Injectable ClassPath Detected: ${file.absolutePath}")
                         injectableTarget = file
                         break
@@ -122,55 +123,49 @@ object Main {
             val injectableTargetStream = ZipInputStream(FileInputStream(injectableTarget))
             val byteArrayOutputStream = ByteArrayOutputStream()
             val zipOutputStream = ZipOutputStream(byteArrayOutputStream)
-            var entry = agent!!.nextEntry
-            while (entry != null) {
-                if (entry.name.startsWith("com/google/gson")) {
-                    agent.closeEntry()
-                    entry = agent.nextEntry
-                    continue
-                }
-                zipOutputStream.putNextEntry(ZipEntry(entry.name))
-                zipOutputStream.write(agent.readBytes())
-                zipOutputStream.closeEntry()
-                agent.closeEntry()
-                entry = agent.nextEntry
-            }
-            agent.close()
             println("Successfully injected SpookySky! Injecting hook...")
             val logFile = File("/tmp/log.txt")
-            entry = injectableTargetStream.nextEntry
+            var entry = injectableTargetStream.nextEntry
             while (entry != null) {
 
                 if (!entry.name.startsWith("ml/rektsky")) {
+                    var classNode = ClassNode()
                     try {
                         zipOutputStream.putNextEntry(ZipEntry(entry.name))
                         var output = injectableTargetStream.readBytes()
-                        if (entry.name == "com/google/gson/Gson.class") {
-                            var classNode = ClassNode()
-                            var reader = ClassReader(output)
+                        if (entry.name.endsWith(".class")) {
+                            val reader = ClassReader(output)
                             reader.accept(classNode, 0)
-                            val targetMethod = classNode.methods.filter { node -> node.name == "<clinit>" }.first()
-                            println("Found injection method! Injecting SpookySky into it...")
+                            val targetMethod = classNode.methods.filter { node -> node.name == "main" }.firstOrNull()
+                            if (targetMethod == null || classNode.name != mainClass.replace(".", "/")) {
+                                injectableTargetStream.closeEntry()
+                                entry = injectableTargetStream.nextEntry
+                                zipOutputStream.write(output)
+                                zipOutputStream.closeEntry()
+                                continue
+                            }
                             var started = false
-                            var newList = InsnList()
-                            newList.add(LdcInsnNode(gsonInjectionStart))
+                            println("Found target method! Injecting into it")
+                            val newList = InsnList()
+                            newList.add(LdcInsnNode(injectionStartTag))
+                            newList.add(InsnNode(Opcodes.POP))
                             newList.add(FieldInsnNode(Opcodes.GETSTATIC, "ml/rektsky/spookysky/Client", "INSTANCE", "Lml/rektsky/spookysky/Client;"))
                             newList.add(InsnNode(Opcodes.POP))
-                            newList.add(LdcInsnNode(gsonInjectionEnd))
+                            newList.add(LdcInsnNode(injectionEndTag))
+                            newList.add(InsnNode(Opcodes.POP))
+                            if (targetMethod.instructions.size() == 0) {
+                                newList.add(InsnNode(Opcodes.RETURN))
+                            }
                             for (instruction in targetMethod.instructions) {
-                                if (instruction is LdcInsnNode) {
-                                    if (instruction.cst == gsonInjectionStart) {
-                                        started = true
-                                        println("Previous SpookySky that's injected into SpookySky has been detected! Removing...")
-                                    } else if (instruction.cst == gsonInjectionEnd) {
-                                        started = false
-                                    } else if (started) {} else {
-                                        newList.add(instruction)
-                                    }
+                                if (instruction is LdcInsnNode && instruction.cst == injectionStartTag) {
+                                    started = true
+                                } else if (instruction is LdcInsnNode && instruction.cst == injectionEndTag) {
+                                    started = false
+                                } else if (started) {} else {
+                                    newList.add(instruction)
                                 }
                             }
                             targetMethod.instructions = newList
-                            println("Successfully injected SpookySky to target method!")
                             var writer = CustomClassWriter()
                             classNode.accept(writer)
                             output = writer.toByteArray()
@@ -178,12 +173,40 @@ object Main {
                         zipOutputStream.write(output)
                         zipOutputStream.closeEntry()
                     } catch (e: Exception) {
+                        e.printStackTrace()
+                        var targetMethod = classNode.methods.filter { node -> node.name == "<clinit>" }.firstOrNull()
+                        if (targetMethod != null) {
+                            for (instruction in targetMethod.instructions) {
+                                println(" - ${instruction.opcode}")
+
+                            }
+                            println(" = = = = = = = = = = ")
+                        }
                     }
                 }
                 injectableTargetStream.closeEntry()
                 entry = injectableTargetStream.nextEntry
             }
             injectableTargetStream.close()
+            entry = agent!!.nextEntry
+            while (entry != null) {
+                try {
+//                    if (entry.name.startsWith("")) {
+//                        agent.closeEntry()
+//                        entry = agent.nextEntry
+//                        continue
+//                    }
+                    zipOutputStream.putNextEntry(ZipEntry(entry.name))
+                    zipOutputStream.write(agent.readBytes())
+                    zipOutputStream.closeEntry()
+                    agent.closeEntry()
+                    entry = agent.nextEntry
+                } catch (ignored: Exception) {
+                    agent.closeEntry()
+                    entry = agent.nextEntry
+                }
+            }
+            agent.close()
             zipOutputStream.close()
             injectableTarget.writeBytes(byteArrayOutputStream.toByteArray())
             println("Successfully injected! Launching Minecraft...")
@@ -192,7 +215,7 @@ object Main {
             builder.command(File(javaHome, "bin/java").absolutePath,
                 *jvmArgs.replace("-XX:+DisableAttachMechanism", "").split(" ").toTypedArray(),
                 "-cp", classPath.joinToString(":"),
-                MonitoredVmUtil.mainClass(vm, true),
+                mainClass,
                 *mainArgs.split(" ").toTypedArray()
             )
             builder.directory(workingDir)
@@ -258,11 +281,11 @@ object Main {
     }
 
 
-    private fun hasGson(file: File): Boolean {
+    private fun isTarget(file: File, mainClass: String): Boolean {
         val zipStream = ZipInputStream(FileInputStream(file))
         var entry = zipStream.nextEntry
         while (entry != null) {
-            if (entry.name.startsWith("com/google/gson")) {
+            if (entry.name.startsWith(mainClass.replace(".", "/"))) {
                 zipStream.close()
                 return true
             }

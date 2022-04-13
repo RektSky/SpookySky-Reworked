@@ -30,6 +30,10 @@ object Client {
         } else {
             try {
                 val socket = Socket("127.0.0.1", 6931)
+                debug("Injection Information:")
+                for (stackTraceElement in Thread.currentThread().stackTrace) {
+                    debug(stackTraceElement.toString())
+                }
                 debug("Loading SpookySky...")
                 CustomJvmSelfAttach.init(File(System.getProperty("java.io.tmpdir")))
                 instrumentation = CustomJvmSelfAttach.getInstrumentation()
@@ -52,7 +56,7 @@ object Client {
         WebGui
         debug("Initializing Commands Manager...")
         CommandsManager
-        if (webGuiOnly) {
+        if (!webGuiOnly) {
             debug("Initializing Processor Manager...")
             ProcessorManager
         }

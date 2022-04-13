@@ -7,13 +7,18 @@ import ml.rektsky.spookysky.events.impl.WebGuiPacketEvent
 import ml.rektsky.spookysky.packets.impl.client.PacketClientExecuteCommand
 import ml.rektsky.spookysky.packets.impl.client.PacketClientRequestAutoComplete
 import ml.rektsky.spookysky.packets.impl.server.PacketServerAutoCompleteResponse
-import ml.rektsky.spookysky.packets.impl.server.PacketServerConsoleMessage
 import ml.rektsky.spookysky.utils.ClassUtils
-import java.awt.Color
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 object CommandsManager {
 
     val commands = ArrayList<Command>()
+
+    private val lock = ReentrantLock()
+    private val notifier = lock.newCondition()
+
+    val scheduledPacketProcessing = ArrayList<WebGuiPacketEvent>()
 
     init {
         EventsManager.register(this)
@@ -22,11 +27,28 @@ object CommandsManager {
             commands.add(command)
             Client.debug("[Commands Manager] Registered command: ${command.name}")
         }
+        Thread {
+            while (true) {
+                lock.withLock {
+                    notifier.await()
+                    for (webGuiPacketEvent in scheduledPacketProcessing) {
+                        processPacket(webGuiPacketEvent)
+                    }
+                    scheduledPacketProcessing.clear()
+                }
+            }
+        }.start()
     }
-
 
     @EventHandler
     fun onPacket(event: WebGuiPacketEvent) {
+        scheduledPacketProcessing.add(event)
+        lock.withLock {
+            notifier.signal()
+        }
+    }
+
+    fun processPacket(event: WebGuiPacketEvent) {
         val packet = event.packet
         val sender = event.sender
         if (packet is PacketClientExecuteCommand) {
@@ -63,3 +85,4 @@ object CommandsManager {
     }
 
 }
+
