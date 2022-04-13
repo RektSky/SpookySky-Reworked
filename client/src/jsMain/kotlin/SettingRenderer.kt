@@ -1,34 +1,33 @@
-import kotlinx.browser.document
 import kotlinx.html.*
-import kotlinx.html.dom.*
-import ml.rektsky.spookysky.module.settings.PacketSetting
-import ml.rektsky.spookysky.module.settings.impl.PacketBooleanSetting
-import ml.rektsky.spookysky.module.settings.impl.PacketKeybindSetting
-import ml.rektsky.spookysky.module.settings.impl.PacketNumberSetting
-import org.w3c.dom.HTMLDivElement
+import ml.rektsky.spookysky.module.settings.AbstractSetting
+import ml.rektsky.spookysky.module.settings.impl.BooleanSetting
+import ml.rektsky.spookysky.module.settings.impl.KeybindSetting
+import ml.rektsky.spookysky.module.settings.impl.NumberSetting
 
 object SettingRenderer {
 
-    fun render(setting: PacketSetting<*, *>, div: DIV) {
-        if (setting is PacketKeybindSetting) {
+    fun render(setting: AbstractSetting<*, *>, div: DIV) {
+        if (setting is KeybindSetting) {
             renderKeybindSetting(setting, div)
         }
-        if (setting is PacketNumberSetting) {
+        if (setting is NumberSetting) {
             renderNumberSetting(setting, div)
         }
-        if (setting is PacketBooleanSetting) {
+        if (setting is BooleanSetting) {
             renderBooleanSetting(setting, div)
         }
     }
 
-    private fun renderKeybindSetting(setting: PacketKeybindSetting, div: DIV) {
+    private fun renderKeybindSetting(setting: KeybindSetting, div: DIV) {
         div.div("setting") {
             p { +setting.name }
-            input(InputType.text, classes = "setting-input keybind-setting")
+            input(InputType.text, classes = "setting-input keybind-setting") {
+                value = setting.value?:"None"
+            }
         }
     }
 
-    private fun renderNumberSetting(setting: PacketNumberSetting, div: DIV) {
+    private fun renderNumberSetting(setting: NumberSetting, div: DIV) {
         div.div("setting") {
             p { +setting.name }
             input(InputType.range, classes = "setting-input number-setting") {
@@ -40,11 +39,10 @@ object SettingRenderer {
         }
     }
 
-    private fun renderBooleanSetting(setting: PacketBooleanSetting, div: DIV) {
+    private fun renderBooleanSetting(setting: BooleanSetting, div: DIV) {
         div.div("setting") {
             p { +setting.name }
-            div(classes = "setting-input boolean-setting boolean-setting-disabled")
-
+            div(classes = "setting-input boolean-setting " + if (setting.value == true) "boolean-setting-enabled" else "boolean-setting-disabled")
         }
     }
 

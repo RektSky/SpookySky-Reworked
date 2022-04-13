@@ -10,8 +10,8 @@ object EventsManager {
     fun callEvent(event: Event) {
         for (listener in listeners) {
             for (method in listener.value) {
-                if (method.parameterTypes[0].isAssignableFrom(event.javaClass)) {
-                    method.invoke(listener, event)
+                if (event.javaClass.isAssignableFrom(method.parameterTypes[0])) {
+                    method.invoke(listener.key, event)
                 }
             }
         }
@@ -20,8 +20,8 @@ object EventsManager {
     fun register(listener: Any) {
         listeners[listener] = ArrayList()
         for (method in listener.javaClass.methods) {
-            if (!Modifier.isStatic(method.modifiers)) {
-                if (method.parameterCount == 1 && method.parameterTypes[0].isAssignableFrom(Event::class.java)) {
+            if (!Modifier.isStatic(method.modifiers) && method.getAnnotationsByType(EventHandler::class.java).isNotEmpty()) {
+                if (method.parameterCount == 1 && Event::class.java.isAssignableFrom(method.parameterTypes[0])) {
                     listeners[listener]!!.add(method)
                 }
             }

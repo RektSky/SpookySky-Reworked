@@ -11,6 +11,7 @@ import sun.jvmstat.monitor.VmIdentifier
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.PrintStream
 import java.net.ServerSocket
 import java.nio.charset.Charset
 import java.util.*
@@ -40,7 +41,7 @@ object Main {
             "\n" +
             "WARNING: Currently, it only works on Linux\n" +
             "WARNING: Don't close it until the minecraft has been launched.\n" +
-            "WARNING: It's gonna use port 6930 and 6931 as communication port, and 8040 as Web GUI port."
+            "WARNING: It's gonna use port 16930 and 6931 as communication port, and 8040 as Web GUI port."
 
     val windowsFlag = System.getProperty("os.name").lowercase(Locale.ENGLISH).contains("windows")
 
@@ -118,11 +119,16 @@ object Main {
                 exitProcess(-1)
             }
             println("Injecting...")
-            val zipInputStream = ZipInputStream(FileInputStream(injectableTarget))
+            val injectableTargetStream = ZipInputStream(FileInputStream(injectableTarget))
             val byteArrayOutputStream = ByteArrayOutputStream()
             val zipOutputStream = ZipOutputStream(byteArrayOutputStream)
             var entry = agent!!.nextEntry
             while (entry != null) {
+                if (entry.name.startsWith("com/google/gson")) {
+                    agent.closeEntry()
+                    entry = agent.nextEntry
+                    continue
+                }
                 zipOutputStream.putNextEntry(ZipEntry(entry.name))
                 zipOutputStream.write(agent.readBytes())
                 zipOutputStream.closeEntry()
@@ -130,12 +136,15 @@ object Main {
                 entry = agent.nextEntry
             }
             agent.close()
-            entry = zipInputStream.nextEntry
+            println("Successfully injected SpookySky! Injecting hook...")
+            val logFile = File("/tmp/log.txt")
+            entry = injectableTargetStream.nextEntry
             while (entry != null) {
-                if (!entry.name.startsWith("ml/rektsky/spookysky/")) {
+
+                if (!entry.name.startsWith("ml/rektsky")) {
                     try {
                         zipOutputStream.putNextEntry(ZipEntry(entry.name))
-                        var output = zipInputStream.readBytes()
+                        var output = injectableTargetStream.readBytes()
                         if (entry.name == "com/google/gson/Gson.class") {
                             var classNode = ClassNode()
                             var reader = ClassReader(output)
@@ -168,12 +177,13 @@ object Main {
                         }
                         zipOutputStream.write(output)
                         zipOutputStream.closeEntry()
-                    } catch (e: Exception) {}
+                    } catch (e: Exception) {
+                    }
                 }
-                zipInputStream.closeEntry()
-                entry = zipInputStream.nextEntry
+                injectableTargetStream.closeEntry()
+                entry = injectableTargetStream.nextEntry
             }
-            zipInputStream.close()
+            injectableTargetStream.close()
             zipOutputStream.close()
             injectableTarget.writeBytes(byteArrayOutputStream.toByteArray())
             println("Successfully injected! Launching Minecraft...")

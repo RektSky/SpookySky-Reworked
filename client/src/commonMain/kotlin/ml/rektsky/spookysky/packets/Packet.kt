@@ -1,8 +1,10 @@
 package ml.rektsky.spookysky.packets
 
+import ml.rektsky.spookysky.utils.FriendlyByteBuffer
+
 abstract class Packet() {
 
-    abstract fun read(data: Map<String, Any>)
-    abstract fun write(data: HashMap<String, Any>)
+    abstract fun read(data: FriendlyByteBuffer)
+    abstract fun write(data: FriendlyByteBuffer)
 
 }
