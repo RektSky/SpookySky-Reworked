@@ -4,6 +4,7 @@ import ml.rektsky.spookysky.commands.CommandsManager
 import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.modules.ModulesManager
 import ml.rektsky.spookysky.processor.ProcessorManager
+import ml.rektsky.spookysky.utils.ChatColor
 import ml.rektsky.spookysky.utils.CustomJvmSelfAttach
 import ml.rektsky.spookysky.webgui.WebGui
 import java.io.File
@@ -24,20 +25,20 @@ object Client {
 
     init {
         if (webGuiOnly) {
-            debug("Loading SpookySky...")
-            debug(" - Debug Run Detected!")
+            addConsoleMessage("Loading SpookySky...")
+            addConsoleMessage(" - Debug Run Detected!")
             init()
         } else {
             try {
                 val socket = Socket("127.0.0.1", 6931)
-                debug("Injection Information:")
+                addConsoleMessage("Injection Information:")
                 for (stackTraceElement in Thread.currentThread().stackTrace) {
-                    debug(stackTraceElement.toString())
+                    addConsoleMessage(stackTraceElement.toString())
                 }
-                debug("Loading SpookySky...")
+                addConsoleMessage("Loading SpookySky...")
                 CustomJvmSelfAttach.init(File(System.getProperty("java.io.tmpdir")))
                 instrumentation = CustomJvmSelfAttach.getInstrumentation()
-                debug("Successfully injected into itself! Initializing client...")
+                addConsoleMessage("Successfully injected into itself! Initializing client...")
                 init()
             } catch (e: Exception) {
                 if (debug) {
@@ -48,25 +49,36 @@ object Client {
     }
 
     internal fun init() {
-        debug("Initializing Events Manager..")
+        addConsoleMessage("Initializing Events Manager..")
         EventsManager
-        debug("Initializing Modules Manager..")
+        addConsoleMessage("Initializing Modules Manager..")
         ModulesManager
-        debug("Initializing Web GUI..")
+        addConsoleMessage("Initializing Web GUI..")
         WebGui
-        debug("Initializing Commands Manager...")
+        addConsoleMessage("Initializing Commands Manager...")
         CommandsManager
         if (!webGuiOnly) {
-            debug("Initializing Processor Manager...")
+            addConsoleMessage("Initializing Processor Manager...")
             ProcessorManager
         }
 
     }
 
 
-    fun debug(message: String) {
+    fun addConsoleMessage(message: String) {
         if (debug) println("[SpookySky Debug] $message")
     }
+
+    fun debug(message: String, color: Int = ChatColor.GRAY) {
+        WebGui.message(message, color, true)
+    }
+
+    fun error(e: Throwable) {
+        for (connectedClient in WebGui.getConnectedClients()) {
+            connectedClient.send(e)
+        }
+    }
+
 }
 
 

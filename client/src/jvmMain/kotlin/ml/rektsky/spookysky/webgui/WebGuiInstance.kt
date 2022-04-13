@@ -22,21 +22,16 @@ class WebGuiInstance(private val socket: WebSocket) {
             send(PacketCommonUpdateModules().apply { modules.add(registeredModule) })
         }
 
-        Client.debug("[${socket.remoteSocketAddress}] Sent modules update to client!")
+        Client.addConsoleMessage("[${socket.remoteSocketAddress}] Sent modules update to client!")
         sendMessage("Connected as $${getIP()}")
 
-        Thread {
-            while (true) {
-                var message = buffer.readLine()
-                if (message != null) {
-                    sendMessage(message, ChatColor.RED)
-                }
-            }
-        }.start()
+        for (message in WebGui.log) {
+            sendMessage(message.message, message.color)
+        }
     }
 
     fun send(packet: Packet) {
-        Client.debug("[${socket.remoteSocketAddress}] Sending ${FriendlyByteBuffer(ByteArray(8192)).apply { packet.write(this) }.getArray().encodeBase64()}")
+        Client.addConsoleMessage("[${socket.remoteSocketAddress}] Sending ${FriendlyByteBuffer(ByteArray(8192)).apply { packet.write(this) }.getArray().encodeBase64()}")
         socket.send(PacketManager.write(packet).encodeBase64())
     }
 
@@ -59,12 +54,7 @@ class WebGuiInstance(private val socket: WebSocket) {
         sendMessage(String(byteArrayOutputStream.toByteArray()), ChatColor.RED)
     }
 
-    private val pipe = PipedInputStream(1024*16) // 16kb, more than enough.
-    private val buffer = BufferedReader(InputStreamReader(pipe))
 
-    fun getPrintWriter(): PrintWriter {
-        return PrintWriter(PipedOutputStream(pipe), true)
-    }
 
 
 }

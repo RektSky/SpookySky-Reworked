@@ -14,6 +14,8 @@ object WebGui {
 
     const val guiPort = 8040
 
+    val log = ArrayList<Message>()
+
     val gson = GsonBuilder()
         .create()
     val socketServer = WebSocketServerImpl(PacketManager.port)
@@ -27,7 +29,10 @@ object WebGui {
         socketServer.broadcast(PacketManager.write(packet).encodeBase64ToByteArray())
     }
 
-    fun message(message: String) {
+    fun message(message: String, color: Int = 0xffffff, perm: Boolean = false) {
+        if (perm) {
+            log.add(Message(message, color))
+        }
         for (value in getConnectedClients()) {
             value.sendMessage(message)
         }
@@ -39,11 +44,14 @@ object WebGui {
 
     fun onPacket(packet: Packet, instance: WebGuiInstance) {
         if (packet is PacketCommonTextMessage) {
-            Client.debug("[WebGui] Got Message from Client: ${packet.message}")
+            Client.addConsoleMessage("[WebGui] Got Message from Client: ${packet.message}")
         }
         WebGuiPacketEvent(packet, instance).callEvent()
     }
 
+
+
+    data class Message(val message: String, val color: Int)
 
 }
 

@@ -1,5 +1,6 @@
 package ml.rektsky.spookysky.commands
 
+import ml.rektsky.spookysky.utils.ChatColor
 import ml.rektsky.spookysky.webgui.WebGuiInstance
 
 abstract class Command(
@@ -10,8 +11,13 @@ abstract class Command(
 ) {
 
     fun executeCommand(sender: WebGuiInstance, args: Array<String>) {
-        if (!onCommand(sender, args)) {
-            sender.sendMessage("Incorrect usage! Usage: $usage", 0xFF5351)
+        try {
+            if (!onCommand(sender, args)) {
+                sender.sendMessage("Incorrect usage! Usage: $usage", 0xFF5351)
+            }
+        } catch (e: Throwable) {
+            sender.sendMessage("Something went wrong while processing the command!", ChatColor.RED)
+            sender.send(e)
         }
     }
 

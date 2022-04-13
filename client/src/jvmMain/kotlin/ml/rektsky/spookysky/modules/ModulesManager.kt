@@ -36,7 +36,7 @@ object ModulesManager {
 
         }, Client::class.java.`package`.name)
         for (clazz in resolverUtil.classes) {
-            Client.debug("[Modules Manager] Registered Module: ${clazz.simpleName}")
+            Client.addConsoleMessage("[Modules Manager] Registered Module: ${clazz.simpleName}")
             val module = (clazz as Class<*>).newInstance() as Module
             modules.add(module)
             var superclass: Class<*>? = module.javaClass
@@ -69,7 +69,7 @@ object ModulesManager {
                 }
                 if (localModule.toggled != remoteModule.toggled) {
                     WebGui.message("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
-                    Client.debug("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
+                    Client.addConsoleMessage("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
                     localModule.toggled = remoteModule.toggled
                 }
                 for (localRemoteSetting in localModule.settings.zip(remoteModule.settings)) {

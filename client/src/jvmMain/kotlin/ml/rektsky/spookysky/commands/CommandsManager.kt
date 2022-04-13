@@ -25,7 +25,7 @@ object CommandsManager {
         for (clazz in ClassUtils.resolvePackage(javaClass.`package`.name, Command::class.java)) {
             val command = clazz.newInstance()
             commands.add(command)
-            Client.debug("[Commands Manager] Registered command: ${command.name}")
+            Client.addConsoleMessage("[Commands Manager] Registered command: ${command.name}")
         }
         Thread {
             while (true) {

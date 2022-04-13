@@ -4,6 +4,9 @@ import ml.rektsky.spookysky.asm.CustomClassWriter
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.*
+import org.objectweb.asm.util.Printer
+import org.objectweb.asm.util.Textifier
+import org.objectweb.asm.util.TraceClassVisitor
 import sun.jvmstat.monitor.HostIdentifier
 import sun.jvmstat.monitor.MonitoredHost
 import sun.jvmstat.monitor.MonitoredVmUtil
@@ -11,6 +14,7 @@ import sun.jvmstat.monitor.VmIdentifier
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.PrintWriter
 import java.net.ServerSocket
 import java.nio.charset.Charset
 import java.util.*
@@ -125,70 +129,7 @@ object Main {
             val zipOutputStream = ZipOutputStream(byteArrayOutputStream)
             println("Successfully injected SpookySky! Injecting hook...")
             val logFile = File("/tmp/log.txt")
-            var entry = injectableTargetStream.nextEntry
-            while (entry != null) {
-
-                if (!entry.name.startsWith("ml/rektsky")) {
-                    var classNode = ClassNode()
-                    try {
-                        zipOutputStream.putNextEntry(ZipEntry(entry.name))
-                        var output = injectableTargetStream.readBytes()
-                        if (entry.name.endsWith(".class")) {
-                            val reader = ClassReader(output)
-                            reader.accept(classNode, 0)
-                            val targetMethod = classNode.methods.filter { node -> node.name == "main" }.firstOrNull()
-                            if (targetMethod == null || classNode.name != mainClass.replace(".", "/")) {
-                                injectableTargetStream.closeEntry()
-                                entry = injectableTargetStream.nextEntry
-                                zipOutputStream.write(output)
-                                zipOutputStream.closeEntry()
-                                continue
-                            }
-                            var started = false
-                            println("Found target method! Injecting into it")
-                            val newList = InsnList()
-                            newList.add(LdcInsnNode(injectionStartTag))
-                            newList.add(InsnNode(Opcodes.POP))
-                            newList.add(FieldInsnNode(Opcodes.GETSTATIC, "ml/rektsky/spookysky/Client", "INSTANCE", "Lml/rektsky/spookysky/Client;"))
-                            newList.add(InsnNode(Opcodes.POP))
-                            newList.add(LdcInsnNode(injectionEndTag))
-                            newList.add(InsnNode(Opcodes.POP))
-                            if (targetMethod.instructions.size() == 0) {
-                                newList.add(InsnNode(Opcodes.RETURN))
-                            }
-                            for (instruction in targetMethod.instructions) {
-                                if (instruction is LdcInsnNode && instruction.cst == injectionStartTag) {
-                                    started = true
-                                } else if (instruction is LdcInsnNode && instruction.cst == injectionEndTag) {
-                                    started = false
-                                } else if (started) {} else {
-                                    newList.add(instruction)
-                                }
-                            }
-                            targetMethod.instructions = newList
-                            var writer = CustomClassWriter()
-                            classNode.accept(writer)
-                            output = writer.toByteArray()
-                        }
-                        zipOutputStream.write(output)
-                        zipOutputStream.closeEntry()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        var targetMethod = classNode.methods.filter { node -> node.name == "<clinit>" }.firstOrNull()
-                        if (targetMethod != null) {
-                            for (instruction in targetMethod.instructions) {
-                                println(" - ${instruction.opcode}")
-
-                            }
-                            println(" = = = = = = = = = = ")
-                        }
-                    }
-                }
-                injectableTargetStream.closeEntry()
-                entry = injectableTargetStream.nextEntry
-            }
-            injectableTargetStream.close()
-            entry = agent!!.nextEntry
+            var entry = agent!!.nextEntry
             while (entry != null) {
                 try {
 //                    if (entry.name.startsWith("")) {
@@ -206,6 +147,75 @@ object Main {
                     entry = agent.nextEntry
                 }
             }
+            entry = injectableTargetStream.nextEntry
+            while (entry != null) {
+                if (!entry.name.startsWith("ml/rektsky")) {
+                    var classNode = ClassNode()
+                    var output = injectableTargetStream.readBytes()
+                    try {
+                        zipOutputStream.putNextEntry(ZipEntry(entry.name))
+                        if (entry.name.endsWith(".class") && entry.name.startsWith(mainClass.replace(".", "/"))) {
+                            val reader = ClassReader(output)
+                            reader.accept(classNode, 0)
+                            val targetMethod = classNode.methods.filter { node -> node.name == "main" }.firstOrNull()
+                            if (targetMethod == null || classNode.name != mainClass.replace(".", "/")) {
+                                injectableTargetStream.closeEntry()
+                                entry = injectableTargetStream.nextEntry
+                                zipOutputStream.write(output)
+                                zipOutputStream.closeEntry()
+                                continue
+                            }
+                            var started = false
+                            var queue = 0
+                            println("Found target method! Injecting into it")
+                            val newList = InsnList()
+                            newList.add(LdcInsnNode(injectionStartTag))
+                            newList.add(InsnNode(Opcodes.POP))
+                            newList.add(FieldInsnNode(Opcodes.GETSTATIC, "ml/rektsky/spookysky/Client", "INSTANCE", "Lml/rektsky/spookysky/Client;"))
+                            newList.add(InsnNode(Opcodes.POP))
+                            newList.add(LdcInsnNode(injectionEndTag))
+                            newList.add(InsnNode(Opcodes.POP))
+
+                            for (instruction in targetMethod.instructions) {
+                                if (instruction is LdcInsnNode && instruction.cst == injectionStartTag) {
+                                    started = true
+                                    continue
+                                } else if (instruction is LdcInsnNode && instruction.cst == injectionEndTag) {
+                                    started = false
+                                    queue = 1
+                                    continue
+                                }
+                                if (started) {
+                                    continue
+                                }
+                                if (queue > 0) {
+                                    queue--
+                                    continue
+                                }
+                                newList.add(instruction)
+                            }
+                            targetMethod.instructions = newList
+                            println("Building new version...")
+//                            val textifier = Textifier()
+//                            val visitor = TraceClassVisitor(classNode, textifier, PrintWriter(System.out, true))
+//                            classNode.accept(visitor)
+                            var writer = CustomClassWriter()
+                            classNode.accept(writer)
+                            output = writer.toByteArray()
+                        }
+                        zipOutputStream.write(output)
+                        zipOutputStream.closeEntry()
+                    } catch (e: Exception) {
+                        try {
+                            zipOutputStream.write(output)
+                            zipOutputStream.closeEntry()
+                        } catch (ignored: Exception) {}
+                    }
+                }
+                injectableTargetStream.closeEntry()
+                entry = injectableTargetStream.nextEntry
+            }
+            injectableTargetStream.close()
             agent.close()
             zipOutputStream.close()
             injectableTarget.writeBytes(byteArrayOutputStream.toByteArray())

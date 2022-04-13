@@ -1,27 +1,17 @@
 package ml.rektsky.spookysky.mapping
 
+import ml.rektsky.spookysky.processor.LoadedClass
 import ml.rektsky.spookysky.processor.ProcessorManager
 import kotlin.concurrent.withLock
 
-abstract class ClassMapping {
+abstract class ClassMapping(
+    userFriendlyName: String,
+    vararg val children: Mapping<*>
+): Mapping<LoadedClass>(userFriendlyName) {
 
-    var mapped: Class<*>? = null
-        protected set(value) {
-            field = value
-            for (processor in ProcessorManager.processors) {
-                if (processor.lock.isLocked) {
-                    processor.lock.withLock {
-                        processor.condition.signalAll()
-                    }
-                }
-            }
-        }
-
-
-
-
-    fun isMapped(): Boolean {
-        return mapped != null
+    fun getReflectiveClass(): Class<*>? {
+        return if (mapped == null) null else
+            Class.forName(mapped!!.classNode.name.replace("/", "."))
     }
 
 }

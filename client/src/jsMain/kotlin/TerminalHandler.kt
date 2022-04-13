@@ -38,7 +38,12 @@ object TerminalHandler {
         set(value) {
             if (field != value) {
                 field = value
-                terminalWindowElement.hidden = !value
+                if (field) {
+                    terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
+                    terminalWindowElement.hidden = false
+                } else {
+                    terminalWindowElement.hidden = true
+                }
             }
         }
 
