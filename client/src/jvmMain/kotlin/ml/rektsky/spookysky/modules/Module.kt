@@ -1,5 +1,6 @@
 package ml.rektsky.spookysky.modules
 
+import ml.rektsky.spookysky.events.impl.PreModuleToggleEvent
 import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.module.Category
 import ml.rektsky.spookysky.module.settings.AbstractSetting
@@ -12,12 +13,14 @@ abstract class Module(
     override var category: Category,
 ): AbstractModule() {
 
-    val keyBind: KeybindSetting = KeybindSetting()
+
+    val keyBind: KeybindSetting = KeybindSetting("KeyBind")
 
     override var settings = ArrayList<AbstractSetting<*, *>>()
 
     override var toggled = false
         set(value) {
+            PreModuleToggleEvent(this, !field, value).callEvent()
             field = value
             if (value) onEnable() else onDisable()
         }

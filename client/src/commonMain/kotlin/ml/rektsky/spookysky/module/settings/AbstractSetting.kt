@@ -11,7 +11,7 @@ abstract open class AbstractSetting<T, Self : AbstractSetting<T, Self>>() {
         writeValue(target)
     }
     fun read(target: FriendlyByteBuffer) {
-
+        readValue(target)
     }
 
     protected open fun writeValue(target: FriendlyByteBuffer) {

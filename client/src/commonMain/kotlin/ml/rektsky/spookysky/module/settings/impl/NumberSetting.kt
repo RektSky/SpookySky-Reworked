@@ -3,18 +3,26 @@ package ml.rektsky.spookysky.module.settings.impl
 import ml.rektsky.spookysky.module.settings.AbstractSetting
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 
-class NumberSetting(): AbstractSetting<Double, NumberSetting>() {
+class NumberSetting(): AbstractSetting<Number, NumberSetting>() {
 
-    var step: Double = 1.toDouble()
-    var min: Double = 0.toDouble()
-    var max: Double = 10.toDouble()
+    constructor(name: String, value: Number, step: Number, min: Number, max: Number) : this() {
+        this.name = name
+        this.value = value
+        this.step = step
+        this.min = min
+        this.max = max
+    }
+
+    var step: Number = 1.toDouble()
+    var min: Number = 0.toDouble()
+    var max: Number = 10.toDouble()
 
     override fun writeValue(target: FriendlyByteBuffer) {
         super.writeValue(target)
-        target.putDouble(this.value!!)
-        target.putDouble(this.step)
-        target.putDouble(this.min)
-        target.putDouble(this.max)
+        target.putDouble(this.value!!.toDouble())
+        target.putDouble(this.step.toDouble())
+        target.putDouble(this.min.toDouble())
+        target.putDouble(this.max.toDouble())
     }
 
     override fun readValue(target: FriendlyByteBuffer) {

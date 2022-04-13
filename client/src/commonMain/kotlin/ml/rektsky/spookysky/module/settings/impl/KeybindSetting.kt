@@ -3,7 +3,13 @@ package ml.rektsky.spookysky.module.settings.impl
 import ml.rektsky.spookysky.module.settings.AbstractSetting
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 
-class KeybindSetting: AbstractSetting<String, KeybindSetting>() {
+class KeybindSetting(): AbstractSetting<String, KeybindSetting>() {
+
+    constructor(name: String) : this() {
+        this.name = name
+        this.value = "None"
+    }
+
 
     override fun writeValue(target: FriendlyByteBuffer) {
         super.writeValue(target)

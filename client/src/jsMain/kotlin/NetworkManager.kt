@@ -4,8 +4,8 @@ import kotlinx.browser.window
 import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.packets.Packet
 import ml.rektsky.spookysky.packets.PacketManager
-import ml.rektsky.spookysky.packets.impl.PacketTextMessage
-import ml.rektsky.spookysky.packets.impl.PacketUpdateModules
+import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
+import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
 import org.w3c.dom.WebSocket
 import org.w3c.files.Blob
 import kotlin.js.Promise
@@ -17,6 +17,7 @@ object NetworkManager {
     private val cachedModules = ArrayList<AbstractModule>()
 
     init {
+        println("[SpookySky] Initializing Network Manager...")
         window.setInterval({
             updateModules()
         })
@@ -24,7 +25,7 @@ object NetworkManager {
         debug("[WEBSOCKET] Connecting to client via WebSocket: ${"ws://${window.location.hostname}:${PacketManager.port}/"}")
         socket.onopen = {
             debug("[WEBSOCKET] Successfully connected to client via WebSocket!")
-            sendPacket(PacketTextMessage().apply { message = "CLIENT_CONNECTION_HANDSHAKE" })
+            sendPacket(PacketCommonTextMessage().apply { message = "CLIENT_CONNECTION_HANDSHAKE" })
         }
         socket.onmessage = { it ->
             debug("[NetworkManager] Got packet: ${it.data.toString()}")
@@ -51,19 +52,15 @@ object NetworkManager {
             return
         }
         for (i in 0 until cachedModules.size) {
-            try {
-                val cached = cachedModules[i]
-                val current = modules[i]
-                if (current.requiresUpdate(cached)) {
-                    updates.add(current.copy())
-                }
-            } catch (e: Exception) {
-                e.printJSStackTrace()
+            val cached = cachedModules[i]
+            val current = modules[i]
+            if (current.requiresUpdate(cached)) {
+                updates.add(current.copy())
             }
         }
         resetCache()
         if (updates.size == 0) return
-        val updatePacket = PacketUpdateModules().apply { this.modules.addAll(updates) }
+        val updatePacket = PacketCommonUpdateModules().apply { this.modules.addAll(updates) }
         sendPacket(updatePacket)
     }
 
@@ -85,7 +82,8 @@ object NetworkManager {
 
     private fun onPacket(packet: Packet) {
         debug("[NetworkManager] Processing packet: ${packet::class.simpleName}")
-        if (packet is PacketUpdateModules) {
+        TerminalHandler.handlePacket(packet)
+        if (packet is PacketCommonUpdateModules) {
             for (module in packet.modules) {
                 val targetModule: AbstractModule? = modules.firstOrNull { module.name == it.name }
                 if (targetModule != null) {
@@ -102,7 +100,7 @@ object NetworkManager {
                 Renderer.updateModuleDisplay(abstractModule)
             }
         }
-        if (packet is PacketTextMessage) {
+        if (packet is PacketCommonTextMessage) {
             println("[REMOTE] ${packet.message}")
         }
     }

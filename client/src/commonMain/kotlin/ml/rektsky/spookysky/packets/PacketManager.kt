@@ -1,7 +1,11 @@
 package ml.rektsky.spookysky.packets
 
-import ml.rektsky.spookysky.packets.impl.PacketTextMessage
-import ml.rektsky.spookysky.packets.impl.PacketUpdateModules
+import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
+import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
+import ml.rektsky.spookysky.packets.impl.client.PacketClientExecuteCommand
+import ml.rektsky.spookysky.packets.impl.client.PacketClientRequestAutoComplete
+import ml.rektsky.spookysky.packets.impl.server.PacketServerAutoCompleteResponse
+import ml.rektsky.spookysky.packets.impl.server.PacketServerConsoleMessage
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 
 object PacketManager {
@@ -10,8 +14,12 @@ object PacketManager {
     private val registered = HashMap<Int, () -> Packet>()
 
     init {
-        registerPacket { PacketTextMessage() }
-        registerPacket { PacketUpdateModules() }
+        registerPacket { PacketCommonTextMessage() }
+        registerPacket { PacketCommonUpdateModules() }
+        registerPacket { PacketClientExecuteCommand() }
+        registerPacket { PacketClientRequestAutoComplete() }
+        registerPacket { PacketServerAutoCompleteResponse() }
+        registerPacket { PacketServerConsoleMessage() }
     }
 
     private fun registerPacket(supplier: () -> Packet) {

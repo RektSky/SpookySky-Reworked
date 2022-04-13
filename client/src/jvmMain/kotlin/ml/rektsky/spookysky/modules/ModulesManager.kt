@@ -5,7 +5,7 @@ import ml.rektsky.spookysky.events.EventHandler
 import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.events.impl.WebGuiPacketEvent
 import ml.rektsky.spookysky.module.settings.AbstractSetting
-import ml.rektsky.spookysky.packets.impl.PacketUpdateModules
+import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
 import ml.rektsky.spookysky.webgui.WebGui
 import org.apache.logging.log4j.core.config.plugins.util.ResolverUtil
 import java.net.URI
@@ -36,8 +36,20 @@ object ModulesManager {
 
         }, Client::class.java.`package`.name)
         for (clazz in resolverUtil.classes) {
-            Client.debug("Registered Module: ${clazz.simpleName}")
-            modules.add((clazz as Class<*>).newInstance() as Module)
+            Client.debug("[Modules Manager] Registered Module: ${clazz.simpleName}")
+            val module = (clazz as Class<*>).newInstance() as Module
+            modules.add(module)
+            var superclass: Class<*>? = module.javaClass
+            while (superclass != null) {
+                for (field in superclass.declaredFields) {
+                    if (AbstractSetting::class.java.isAssignableFrom(field.type)) {
+                        field.isAccessible = true
+                        module.settings.add(field.get(module) as AbstractSetting<*, *>)
+                    }
+                }
+                superclass = superclass.superclass
+            }
+
         }
 
         EventsManager.register(this)
@@ -48,16 +60,16 @@ object ModulesManager {
 
     @EventHandler
     fun packetListener(event: WebGuiPacketEvent) {
-        if (event.packet is PacketUpdateModules) {
+        if (event.packet is PacketCommonUpdateModules) {
             for (remoteModule in event.packet.modules) {
                 val localModule = getRegisteredModules().firstOrNull {remoteModule.name == it.name}
                 if (localModule == null) {
-                    event.gui.sendMessage("Client just sent an invalid module update packet! Got name: ${remoteModule.name}")
+                    event.sender.sendMessage("Client just sent an invalid module update packet! Got name: ${remoteModule.name}")
                     return
                 }
                 if (localModule.toggled != remoteModule.toggled) {
-                    WebGui.message("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.gui.getIP()}")
-                    Client.debug("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.gui.getIP()}")
+                    WebGui.message("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
+                    Client.debug("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
                     localModule.toggled = remoteModule.toggled
                 }
                 for (localRemoteSetting in localModule.settings.zip(remoteModule.settings)) {
@@ -65,7 +77,7 @@ object ModulesManager {
                     val remote: AbstractSetting<Any, *> = localRemoteSetting.second as AbstractSetting<Any, *>
                     local.value = remote.value
                 }
-                WebGui.broadcastPacket(PacketUpdateModules().apply { modules = ArrayList(listOf(localModule.copy())) })
+                WebGui.broadcastPacket(PacketCommonUpdateModules().apply { modules = ArrayList(listOf(localModule.copy())) })
             }
         }
     }

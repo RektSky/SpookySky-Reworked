@@ -7,16 +7,24 @@ object HttpServerThread: Thread("server-thread") {
 
     val server: HttpServer = HttpServer.create(InetSocketAddress("0.0.0.0", WebGui.guiPort), 100)
     val indexHtml: ByteArray = run {
-        val stream = javaClass.classLoader.getResourceAsStream("index.html")!!
-        var readBytes = stream.readBytes()
-        stream.close()
-        readBytes
+        try {
+            val stream = javaClass.classLoader.getResourceAsStream("index.html")!!
+            var readBytes = stream.readBytes()
+            stream.close()
+            readBytes
+        } catch (ignored: NullPointerException) {
+            "undefined".encodeToByteArray()
+        }
     }
     val clientJs: ByteArray = run {
-        val stream = javaClass.classLoader.getResourceAsStream("client.js")!!
-        var readBytes = stream.readBytes()
-        stream.close()
-        readBytes
+        try {
+            val stream = javaClass.classLoader.getResourceAsStream("client.js")!!
+            var readBytes = stream.readBytes()
+            stream.close()
+            readBytes
+        } catch (ignored: NullPointerException) {
+            "undefined".encodeToByteArray()
+        }
     }
 
 

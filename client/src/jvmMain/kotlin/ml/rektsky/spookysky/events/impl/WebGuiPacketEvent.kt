@@ -6,5 +6,5 @@ import ml.rektsky.spookysky.webgui.WebGuiInstance
 
 class WebGuiPacketEvent(
     val packet: Packet,
-    val gui: WebGuiInstance
+    val sender: WebGuiInstance
 ): Event()

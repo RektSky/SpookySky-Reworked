@@ -5,13 +5,10 @@ package ml.rektsky.spookysky.webgui
 import com.google.gson.GsonBuilder
 import io.matthewnelson.component.base64.encodeBase64ToByteArray
 import ml.rektsky.spookysky.Client
-import ml.rektsky.spookysky.events.EventHandler
-import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.events.impl.WebGuiPacketEvent
 import ml.rektsky.spookysky.packets.Packet
 import ml.rektsky.spookysky.packets.PacketManager
-import ml.rektsky.spookysky.packets.impl.PacketTextMessage
-import ml.rektsky.spookysky.packets.impl.PacketUpdateModules
+import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
 
 object WebGui {
 
@@ -41,7 +38,7 @@ object WebGui {
     }
 
     fun onPacket(packet: Packet, instance: WebGuiInstance) {
-        if (packet is PacketTextMessage) {
+        if (packet is PacketCommonTextMessage) {
             Client.debug("[WebGui] Got Message from Client: ${packet.message}")
         }
         WebGuiPacketEvent(packet, instance).callEvent()

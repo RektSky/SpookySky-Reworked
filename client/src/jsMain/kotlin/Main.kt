@@ -3,6 +3,7 @@ import kotlinx.browser.window
 import kotlinx.html.dom.create
 import kotlinx.html.js.a
 import ml.rektsky.spookysky.module.Category
+import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.get
 
 object Main {
@@ -28,13 +29,14 @@ object Main {
 }
 
 fun main() {
-    NetworkManager
     window.onload = {
         realMain()
     }
 }
 
 fun realMain() {
+    println("[SpookySky] SpookySky Web Gui has been loaded! Initializing...")
+    NetworkManager
     for (value in Category.values()) {
         var element = document.create.a(classes = "clickable-category-button") {
             +value.displayName
@@ -46,6 +48,8 @@ fun realMain() {
         })
     }
     Main.currentCategory = Category.COMBAT
+
+    TerminalHandler
 }
 
 

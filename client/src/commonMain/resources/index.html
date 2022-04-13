@@ -2,6 +2,7 @@
 <head>
     <title>SpookySky</title>
     <script type="text/javascript" src="client.js"></script>
+    <!--<editor-fold desc="Panel / global style">-->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Risque&family=Source+Code+Pro:wght@300;400;500&display=swap');
 
@@ -88,7 +89,7 @@
             color: #81A4FF;
         }
 
-        #client-settings {
+        #open-terminal {
             position: absolute;
             bottom: 3%;
         }
@@ -284,6 +285,10 @@
         }
 
     </style>
+    <!--</editor-fold>-->
+
+    <!--<editor-fold desc="Terminal Overlay Style">-->
+
     <script>
         addEventListener("load", ev => {
             setInterval(() => {
@@ -323,48 +328,207 @@
                     }
                 }
             });
+
+        })
+
+        setInterval(() => {
+            if (document.getElementById("terminal-window").hasAttribute("hidden")) {
+                document.getElementById("terminal-overlay").setAttribute("hidden", "")
+            } else {
+                document.getElementById("terminal-overlay").removeAttribute("hidden")
+            }
         })
     </script>
+    <!--</editor-fold>-->
+
+
 </head>
 <body>
 
     <div style="display: flex; flex-direction: row">
-        <div id="left">
-            <h1 id="title">SpookySky</h1>
-            <p id="credits">by RektSky team</p>
-            <hr>
-            <div id="categories">
+        <div id="terminal-window" hidden>
+            <terminal-style>
+                <style>
+                    #terminal * {
+                        -webkit-user-select: text; /* Safari */
+                        -moz-user-select: text; /* Firefox */
+                        -ms-user-select: text; /* IE10+/Edge */
+                        user-select: text; /* Standard */
+                    }
+
+                    #terminal-window {
+                        -webkit-user-select: text; /* Safari */
+                        -moz-user-select: text; /* Firefox */
+                        -ms-user-select: text; /* IE10+/Edge */
+                        user-select: text; /* Standard */
+                        position: absolute;
+                        left: 100px;
+                        right: 100px;
+                        top: 60px;
+                        bottom: 60px;
+                        background-color: #222222;
+                        z-index: 100001;
+                        border-radius: 0.4vw;
+                        box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25), 6px 4px 28px rgba(0, 0, 0, 0.8);
+                    }
+
+                    #terminal {
+                        -webkit-user-select: text; /* Safari */
+                        -moz-user-select: text; /* Firefox */
+                        -ms-user-select: text; /* IE10+/Edge */
+                        user-select: text; /* Standard */
+                        background-color: #161616;
+                        position: absolute;
+                        left: 30px;
+                        right: 30px;
+                        top: 20px;
+                        bottom: 70px;
+                        border-radius: 0.6vw;
+                        overflow-y: scroll;
+                        overflow-x: scroll;
+                        white-space: nowrap;
+                    }
+
+                    #terminal {
+                        scrollbar-width: auto;
+                        scrollbar-color: #7b7b7b #ffffff;
+                        border-radius: 10px;
+                        padding: 20px;
+                    }
+
+                    #terminal::-webkit-scrollbar {
+                        width: 7px;
+                    }
+
+                    #terminal::-webkit-scrollbar:horizontal {
+                        height: 7px;
+                    }
+
+
+                    #terminal::-webkit-scrollbar-track {
+                        background: #ffffff;
+                    }
+
+                    #terminal::-webkit-scrollbar-thumb {
+                        background-color: #7b7b7b;
+                        border-radius: 0px;
+                        border: 3px none #404040;
+                    }
+
+                    #command-input {
+                        position: absolute;
+                        bottom: 20px;
+                        left: 30px;
+                        height: 35px;
+                        right: 30px;
+                        outline: none;
+                        border-radius: 5px;
+                        color: black;
+                        padding-left: 20px;
+                    }
+
+                </style>
+            </terminal-style>
+<!--        (<So it's collapsable )-->
+            <style>
+                #suggestions {
+                    background-color: #181818;
+                    position: absolute;
+                    bottom: 55px;
+                    left: 40px;
+                    min-width: 200px;
+                    z-index: 100000;
+                    max-height: 200px;
+                    overflow: scroll;
+                }
+
+                #suggestions li {
+                    padding-left: 10px;
+                    list-style-type: none;
+                    color: #87DBFF;
+                }
+
+                .selected-suggestion {
+                    background-color: #3f3f3f;
+                }
+                #suggestions::-webkit-scrollbar {
+                    display: none;
+                }
+
+            </style>
+            <ul id="suggestions" hidden>
+
+
+            </ul>
+            <div id="terminal">
             </div>
-            <a class="clickable-category-button" id="client-settings">Settings</a>
+            <input id="command-input" placeholder="Type 'help' for commands list">
+        </div>
+
+        <div id="terminal-overlay">
+            <script>
+                addEventListener("load", () => {
+                })
+
+            </script>
+            <!--<editor-fold desc="Terminal Overlay Style" defaultstate="collapsed">-->
+            <style>
+                #terminal-overlay {
+                    backdrop-filter: blur(10px);
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    top: 0;
+                    bottom: 0;
+                    background-color: transparent;
+                    z-index: 100000;
+                }
+            </style>
+            <!--</editor-fold>-->
         </div>
 
 
-        <div id="right">
-            <div class="module" module-name="KillAura" hidden>
-                <div class="module-title">
-                    <h1>ModuleName</h1>
-                    <h2>Your description here!</h2>
-                    <h3 class="enabled">Enabled</h3>
-                    <svg width="11" height="16" fill="none" class="arrow">
-                        <path d="M0 8L10.5 0.205772L10.5 15.7942L0 8Z" fill="white"/>
-                    </svg>
+        <!--<editor-fold desc="Main Panel" defaultstate="collapsed">-->
+        <div id="main">
+            <div id="left">
+                <h1 id="title">SpookySky</h1>
+                <p id="credits">by RektSky team</p>
+                <hr>
+                <div id="categories">
                 </div>
-                <div class="settings" hidden>
-                    <div class="setting" setting="Setting 1">
-                        <p>Range</p>
-                        <input type="range"value="hi" class="setting-input number-setting">
+                <a class="clickable-category-button" id="open-terminal">Terminal</a>
+            </div>
+
+
+            <div id="right">
+                <div class="module" module-name="KillAura" hidden>
+                    <div class="module-title">
+                        <h1>ModuleName</h1>
+                        <h2>Your description here!</h2>
+                        <h3 class="enabled">Enabled</h3>
+                        <svg width="11" height="16" fill="none" class="arrow">
+                            <path d="M0 8L10.5 0.205772L10.5 15.7942L0 8Z" fill="white"/>
+                        </svg>
                     </div>
-                    <div class="setting" setting="Setting 2">
-                        <p>Raytrace</p>
-                        <div class="setting-input boolean-setting boolean-setting-disabled"></div>
-                    </div>
-                    <div class="setting" setting="Setting 2">
-                        <p>KeyBind</p>
-                        <input type="text" class="setting-input keybind-setting">
+                    <div class="settings" hidden>
+                        <div class="setting" setting="Setting 1">
+                            <p>Range</p>
+                            <input type="range"value="hi" class="setting-input number-setting">
+                        </div>
+                        <div class="setting" setting="Setting 2">
+                            <p>Raytrace</p>
+                            <div class="setting-input boolean-setting boolean-setting-disabled"></div>
+                        </div>
+                        <div class="setting" setting="Setting 2">
+                            <p>KeyBind</p>
+                            <input type="text" class="setting-input keybind-setting">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!--</editor-fold>-->
+
     </div>
 
 

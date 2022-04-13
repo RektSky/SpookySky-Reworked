@@ -5,8 +5,9 @@ import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.modules.ModulesManager
 import ml.rektsky.spookysky.packets.Packet
 import ml.rektsky.spookysky.packets.PacketManager
-import ml.rektsky.spookysky.packets.impl.PacketTextMessage
-import ml.rektsky.spookysky.packets.impl.PacketUpdateModules
+import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
+import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
+import ml.rektsky.spookysky.packets.impl.server.PacketServerConsoleMessage
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 import org.java_websocket.WebSocket
 import java.net.InetSocketAddress
@@ -16,7 +17,7 @@ class WebGuiInstance(private val socket: WebSocket) {
 
     init {
         for (registeredModule in ModulesManager.getRegisteredModules()) {
-            send(PacketUpdateModules().apply { modules.add(registeredModule) })
+            send(PacketCommonUpdateModules().apply { modules.add(registeredModule) })
         }
 
         Client.debug("[${socket.remoteSocketAddress}] Sent modules update to client!")
@@ -37,7 +38,8 @@ class WebGuiInstance(private val socket: WebSocket) {
     }
 
     fun sendMessage(message: String) {
-        send(PacketTextMessage().apply { this.message = message })
+        send(PacketCommonTextMessage().apply { this.message = message })
+        send(PacketServerConsoleMessage(message))
     }
 
 

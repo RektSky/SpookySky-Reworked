@@ -1,5 +1,6 @@
 package ml.rektsky.spookysky
 
+import ml.rektsky.spookysky.commands.CommandsManager
 import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.modules.ModulesManager
 import ml.rektsky.spookysky.utils.CustomJvmSelfAttach
@@ -9,8 +10,10 @@ import java.io.OutputStream
 import java.io.PrintStream
 import java.lang.instrument.Instrumentation
 import java.net.Socket
+var debugRun = false
 
 object Client {
+
 
     const val debug = true
     const val disableMinecraftLog = true
@@ -21,16 +24,22 @@ object Client {
         private set
 
     init {
-        try {
-            val socket = Socket("127.0.0.1", 6931)
+        if (debugRun) {
             debug("Loading SpookySky...")
-            CustomJvmSelfAttach.init(File(System.getProperty("java.io.tmpdir")))
-            instrumentation = CustomJvmSelfAttach.getInstrumentation()
-            debug("Successfully injected into itself! Initializing client...")
+            debug(" - Debug Run Detected!")
             init()
-        } catch (e: Exception) {
-            if (debug) {
-                e.printStackTrace()
+        } else {
+            try {
+                val socket = Socket("127.0.0.1", 6931)
+                debug("Loading SpookySky...")
+                CustomJvmSelfAttach.init(File(System.getProperty("java.io.tmpdir")))
+                instrumentation = CustomJvmSelfAttach.getInstrumentation()
+                debug("Successfully injected into itself! Initializing client...")
+                init()
+            } catch (e: Exception) {
+                if (debug) {
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -42,6 +51,8 @@ object Client {
         ModulesManager
         debug("Initializing Web GUI..")
         WebGui
+        debug("Initializing Commands Manager...")
+        CommandsManager
     }
 
 
@@ -52,5 +63,6 @@ object Client {
 
 
 fun main() {
-    Client.init()
+    debugRun = true
+    Client
 }

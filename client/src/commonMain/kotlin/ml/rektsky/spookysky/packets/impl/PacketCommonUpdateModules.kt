@@ -4,7 +4,7 @@ import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.packets.Packet
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 
-class PacketUpdateModules: Packet() {
+class PacketCommonUpdateModules: Packet() {
 
     var modules = ArrayList<AbstractModule>()
 

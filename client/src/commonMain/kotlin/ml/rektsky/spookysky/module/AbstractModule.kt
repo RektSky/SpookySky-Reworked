@@ -27,7 +27,9 @@ open class AbstractModule() {
         for (setting in settings) {
             settingsBuffer.add { it ->
                 it.putInt(SettingsManager.settings
-                    .filter { v -> v.value::class.simpleName == setting::class.simpleName }
+                    .filter { v ->
+                        v.value()::class.simpleName == setting::class.simpleName
+                    }
                     .firstNotNullOf { e -> e.key }
                 )
                 setting.write(it)
