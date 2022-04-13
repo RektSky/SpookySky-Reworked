@@ -11,7 +11,8 @@ import java.net.InetSocketAddress
 
 class WebSocketServerImpl(port: Int): WebSocketServer(InetSocketAddress("0.0.0.0", port)) {
 
-    val webGuiInstances = HashMap<WebSocket, WebGuiInstance>()
+    var webGuiInstances: HashMap<WebSocket, WebGuiInstance>? = HashMap()
+    // Execuse me, why is it null?? KOTLIN??
 
     init {
         Client.addConsoleMessage("Attempting to start WebSocket Server")
@@ -19,17 +20,25 @@ class WebSocketServerImpl(port: Int): WebSocketServer(InetSocketAddress("0.0.0.0
 
     override fun onOpen(conn: WebSocket?, handshake: ClientHandshake?) {
         Client.addConsoleMessage("A connection has created from ${conn?.remoteSocketAddress}")
-        webGuiInstances[conn!!] = WebGuiInstance(conn)
+        if (webGuiInstances == null) {
+            webGuiInstances = HashMap()
+        }
+        webGuiInstances!![conn!!] = WebGuiInstance(conn)
     }
 
     override fun onClose(conn: WebSocket?, code: Int, reason: String?, remote: Boolean) {
         Client.addConsoleMessage("The connection with ${conn?.remoteSocketAddress} has been closed")
-        webGuiInstances.remove(conn!!)
+        if (webGuiInstances == null) {
+            webGuiInstances = HashMap()
+        }
+        webGuiInstances!!.remove(conn!!)
     }
 
     override fun onMessage(conn: WebSocket?, message: String?) {
-        Client.addConsoleMessage("Got Message! Serializing... (${message})")
-        WebGui.onPacket(PacketManager.read(message!!.decodeBase64ToArray()!!), webGuiInstances[conn]!!)
+        if (webGuiInstances == null) {
+            webGuiInstances = HashMap()
+        }
+        WebGui.onPacket(PacketManager.read(message!!.decodeBase64ToArray()!!), webGuiInstances!![conn]!!)
     }
 
     override fun onError(conn: WebSocket?, ex: Exception?) {

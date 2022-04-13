@@ -1,10 +1,13 @@
 package ml.rektsky.spookysky.processor
 
 import ml.rektsky.spookysky.Client
+import ml.rektsky.spookysky.mapping.ClassMapping
 import ml.rektsky.spookysky.mapping.Mapping
 import ml.rektsky.spookysky.utils.ASMUtils
+import ml.rektsky.spookysky.utils.ASMUtils.compile
 import ml.rektsky.spookysky.utils.ClassUtils
 import org.objectweb.asm.tree.ClassNode
+import java.lang.instrument.ClassDefinition
 import java.lang.instrument.ClassFileTransformer
 import java.lang.reflect.Modifier
 import java.security.ProtectionDomain
@@ -12,10 +15,12 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 
+
 object ProcessorManager {
 
     val processors = ArrayList<Processor>()
-    val mappings = ArrayList<Mapping<*>>()
+    val mappings = ArrayList<ClassMapping>()
+
 
     private val classesLock = ReentrantLock()
     private val classes = HashMap<String, LoadedClass>()
@@ -56,9 +61,9 @@ object ProcessorManager {
 
 
         Client.debug("Registering mappings...")
-        ClassUtils.resolvePackage(Client.javaClass.`package`.name, Mapping::class.java)
+        ClassUtils.resolvePackage(Client.javaClass.`package`.name, ClassMapping::class.java)
             .filter { !Modifier.isAbstract(it.modifiers) }.forEach {
-                mappings.add(it.getField("INSTANCE").get(null) as Mapping<*>)
+                mappings.add(it.getField("INSTANCE").get(null) as ClassMapping)
                 Client.debug("Registered mapping: ${(it.getField("INSTANCE").get(null) as Mapping<*>).name}")
             }
     }
@@ -71,8 +76,12 @@ object ProcessorManager {
             classfileBuffer: ByteArray?
         ): ByteArray {
             val node = ASMUtils.decompile(classfileBuffer!!)
-            val loadedClass = LoadedClass(node)
+            val loadedClass = LoadedClass(node, classfileBuffer)
             classesLock.withLock {
+                if (className in classes) {
+                    classes[className!!] = loadedClass
+                    return classfileBuffer
+                }
                 classes[className!!] = loadedClass
             }
             for (processor in processors) {
@@ -92,12 +101,24 @@ object ProcessorManager {
 
 
 
-class LoadedClass(
-    val classNode: ClassNode
+data class LoadedClass(
+    val classNode: ClassNode,
+    val rawData: ByteArray
 ) {
     
     fun getReflectionClass(): Class<*> {
         return Class.forName(classNode.name.replace("/", "."))
     }
-    
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is LoadedClass) return false
+        return classNode.name == other.classNode.name
+    }
+
+    override fun hashCode(): Int {
+        var result = classNode.hashCode()
+        result = 31 * result + rawData.contentHashCode()
+        return result
+    }
+
 }

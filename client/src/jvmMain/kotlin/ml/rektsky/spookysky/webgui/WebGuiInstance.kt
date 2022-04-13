@@ -31,7 +31,6 @@ class WebGuiInstance(private val socket: WebSocket) {
     }
 
     fun send(packet: Packet) {
-        Client.addConsoleMessage("[${socket.remoteSocketAddress}] Sending ${FriendlyByteBuffer(ByteArray(8192)).apply { packet.write(this) }.getArray().encodeBase64()}")
         socket.send(PacketManager.write(packet).encodeBase64())
     }
 

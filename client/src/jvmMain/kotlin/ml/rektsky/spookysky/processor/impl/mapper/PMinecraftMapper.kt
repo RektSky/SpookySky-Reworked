@@ -1,6 +1,5 @@
-package ml.rektsky.spookysky.processor.impl
+package ml.rektsky.spookysky.processor.impl.mapper
 
-import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.mapping.mappings.MapMinecraft
 import ml.rektsky.spookysky.processor.LoadedClass
 import ml.rektsky.spookysky.processor.Processor

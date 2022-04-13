@@ -22,17 +22,10 @@ class CommandMapStatus: Command(
         var query = if (args.isEmpty()) "" else args.joinToString(" ")
 
         for (mapping in ProcessorManager.mappings) {
-            if (mapping is ClassMapping && query in mapping.name) {
+            if (query in mapping.name) {
                 sender.sendMessage(mapping.name +
                         if(mapping.isMapped()) "  -  ${mapping.mapped!!.classNode.name}" else "  -  UNMAPPED",
                         if (mapping.isMapped()) ChatColor.GREEN else ChatColor.RED)
-            }
-            if (mapping is ClassMapping) {
-                if (mapping.children.any {query in it.name}) {
-                    sender.sendMessage(mapping.name +
-                            if(mapping.isMapped()) "  -  ${mapping.mapped!!.classNode.name}" else "  -  UNMAPPED",
-                        if (mapping.isMapped()) ChatColor.GREEN else ChatColor.RED)
-                }
                 for (child in mapping.children) {
                     if (child is FieldMapping && query in child.name) {
                         sender.sendMessage("    ${child.name}" + if (child.isMapped()) "  -  ${child.mapped!!.name}" else "  -  UNMAPPED",

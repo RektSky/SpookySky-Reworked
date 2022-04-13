@@ -1,15 +1,20 @@
 package ml.rektsky.spookysky.modules.impl
 
+import ml.rektsky.spookysky.Client
+import ml.rektsky.spookysky.events.EventHandler
+import ml.rektsky.spookysky.events.impl.game.ClientTickEvent
 import ml.rektsky.spookysky.module.Category
 import ml.rektsky.spookysky.module.settings.impl.KeybindSetting
 import ml.rektsky.spookysky.modules.Module
 import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
 import ml.rektsky.spookysky.webgui.WebGui
 
-class Test: Module("Test", "A module for testing in MOVEMENT category", Category.MOVEMENT) {
+class Test: Module("Test", "A module for testing in MISC category", Category.MISC) {
 
-    val keyBindA: KeybindSetting = KeybindSetting("Active Key")
-
+    @EventHandler
+    fun onTick(event: ClientTickEvent) {
+        Client.debug("Tick!")
+    }
 
 
     override fun onDisable() {

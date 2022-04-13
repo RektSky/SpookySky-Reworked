@@ -3,7 +3,7 @@ package ml.rektsky.spookysky.modules
 import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.events.EventHandler
 import ml.rektsky.spookysky.events.EventsManager
-import ml.rektsky.spookysky.events.impl.WebGuiPacketEvent
+import ml.rektsky.spookysky.events.impl.client.WebGuiPacketEvent
 import ml.rektsky.spookysky.module.settings.AbstractSetting
 import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
 import ml.rektsky.spookysky.webgui.WebGui

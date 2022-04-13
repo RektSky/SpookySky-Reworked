@@ -7,7 +7,7 @@ import ml.rektsky.spookysky.webgui.WebGuiInstance
 
 class CommandLoadedClass: Command(
     "classes",
-    "[DEBUG] Show all classes loaded by ProcessorManager",
+    "Show all classes loaded by ProcessorManager",
     "classes"
 ) {
     override fun onCommand(sender: WebGuiInstance, args: Array<String>): Boolean {

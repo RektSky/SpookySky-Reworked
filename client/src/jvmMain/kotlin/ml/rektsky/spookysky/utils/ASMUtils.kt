@@ -20,3 +20,15 @@ object ASMUtils {
     }
 
 }
+
+fun Any.getClassName(): String {
+    return javaClass.name
+}
+
+fun Any.getDescriptorName(): String {
+    return javaClass.name.replace(".", "/")
+}
+
+fun Any.getBytecodeName(): String {
+    return DescriptorUtil.toDescriptorTypeName(javaClass.name)
+}

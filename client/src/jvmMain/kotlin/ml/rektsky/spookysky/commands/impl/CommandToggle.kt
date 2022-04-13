@@ -26,7 +26,6 @@ class CommandToggle: Command("toggle", "Toggle a module", "toggle <Module Name>"
     }
 
     override fun getAutoCompleteResult(sender: WebGuiInstance, args: Array<String>): Array<String> {
-        println(args.size)
         if (args.size <= 1) {
             return ModulesManager.getRegisteredModules().map { it.name }.toTypedArray()
         }

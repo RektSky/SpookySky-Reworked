@@ -19,12 +19,9 @@ class CommandProcessors: Command(
             sender.sendMessage("    Status: ${processor.thread.state.name}")
             sender.sendMessage("    Dependencies:")
             for (dependency in processor.dependencies) {
-                if (dependency.isMapped()) {
-                    sender.sendMessage("      - ${dependency.name}", if (dependency.isMapped()) ChatColor.GREEN else ChatColor.RED)
-                }
+                sender.sendMessage("      - ${dependency.name}", if (dependency.isMapped()) ChatColor.GREEN else ChatColor.RED)
             }
-            sender.sendMessage("    Job Done: ${processor.isJobDone()}")
-            sender.sendMessage("    Locked (due to dependency is missing): ${processor.lock.isLocked}")
+            sender.sendMessage("    Job Done: ${processor.isJobDone()}", if (processor.isJobDone()) ChatColor.GREEN else ChatColor.RED)
             sender.sendMessage("")
         }
 
@@ -32,12 +29,9 @@ class CommandProcessors: Command(
         sender.sendMessage("Instrumentation Instance: ${Client.instrumentation}")
         sender.sendMessage("")
         for (processor in ProcessorManager.processors) {
-
-            if (processor.lock.isLocked) {
-                Processor.threadPool.submit {
-                    processor.lock.withLock {
-                        processor.condition.signal()
-                    }
+            Processor.threadPool.submit {
+                processor.lock.withLock {
+                    processor.condition.signal()
                 }
             }
         }

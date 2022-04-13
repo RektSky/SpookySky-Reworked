@@ -5,7 +5,7 @@ package ml.rektsky.spookysky.webgui
 import com.google.gson.GsonBuilder
 import io.matthewnelson.component.base64.encodeBase64ToByteArray
 import ml.rektsky.spookysky.Client
-import ml.rektsky.spookysky.events.impl.WebGuiPacketEvent
+import ml.rektsky.spookysky.events.impl.client.WebGuiPacketEvent
 import ml.rektsky.spookysky.packets.Packet
 import ml.rektsky.spookysky.packets.PacketManager
 import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
@@ -39,7 +39,7 @@ object WebGui {
     }
 
     fun getConnectedClients(): Array<WebGuiInstance> {
-        return socketServer.webGuiInstances.values.toTypedArray()
+        return socketServer.webGuiInstances!!.values.toTypedArray()
     }
 
     fun onPacket(packet: Packet, instance: WebGuiInstance) {

@@ -70,7 +70,7 @@ object Client {
     }
 
     fun debug(message: String, color: Int = ChatColor.GRAY) {
-        WebGui.message(message, color, true)
+        WebGui.message("[DEBUG] " + message, color, true)
     }
 
     fun error(e: Throwable) {

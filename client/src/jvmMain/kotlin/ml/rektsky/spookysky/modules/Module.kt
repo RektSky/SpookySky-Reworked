@@ -1,6 +1,6 @@
 package ml.rektsky.spookysky.modules
 
-import ml.rektsky.spookysky.events.impl.PreModuleToggleEvent
+import ml.rektsky.spookysky.events.impl.client.PreModuleToggleEvent
 import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.module.Category
 import ml.rektsky.spookysky.module.settings.AbstractSetting

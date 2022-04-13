@@ -1,4 +1,4 @@
-package ml.rektsky.spookysky.events.impl
+package ml.rektsky.spookysky.events.impl.client
 
 import ml.rektsky.spookysky.commands.Command
 import ml.rektsky.spookysky.events.types.Cancellable

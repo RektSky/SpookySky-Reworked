@@ -1,6 +1,7 @@
 package ml.rektsky.spookysky.mapping
 
 import ml.rektsky.spookysky.Client
+import ml.rektsky.spookysky.processor.Processor
 import ml.rektsky.spookysky.processor.ProcessorManager
 import kotlin.concurrent.withLock
 
@@ -13,7 +14,7 @@ abstract class Mapping<T>(val name: String) {
             }
             field = value
             for (processor in ProcessorManager.processors) {
-                if (processor.lock.isLocked) {
+                Processor.threadPool.submit {
                     processor.lock.withLock {
                         processor.condition.signal()
                     }

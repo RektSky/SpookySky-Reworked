@@ -229,7 +229,6 @@ object CustomJvmSelfAttach {
     @JvmStatic
     fun main(args: Array<String>) {
         CustomJvmSelfAttach.init(File("build/jsa"))
-        println(instrumentation0)
     }
     
 }

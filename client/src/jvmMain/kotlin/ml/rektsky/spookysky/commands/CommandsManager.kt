@@ -3,7 +3,7 @@ package ml.rektsky.spookysky.commands
 import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.events.EventHandler
 import ml.rektsky.spookysky.events.EventsManager
-import ml.rektsky.spookysky.events.impl.WebGuiPacketEvent
+import ml.rektsky.spookysky.events.impl.client.WebGuiPacketEvent
 import ml.rektsky.spookysky.packets.impl.client.PacketClientExecuteCommand
 import ml.rektsky.spookysky.packets.impl.client.PacketClientRequestAutoComplete
 import ml.rektsky.spookysky.packets.impl.server.PacketServerAutoCompleteResponse
@@ -19,6 +19,7 @@ object CommandsManager {
     private val notifier = lock.newCondition()
 
     val scheduledPacketProcessing = ArrayList<WebGuiPacketEvent>()
+    private val packetProcessingLock = ReentrantLock()
 
     init {
         EventsManager.register(this)
@@ -31,10 +32,13 @@ object CommandsManager {
             while (true) {
                 lock.withLock {
                     notifier.await()
-                    for (webGuiPacketEvent in scheduledPacketProcessing) {
-                        processPacket(webGuiPacketEvent)
+                    packetProcessingLock.withLock {
+                        for (webGuiPacketEvent in scheduledPacketProcessing) {
+                            processPacket(webGuiPacketEvent)
+                        }
+                        scheduledPacketProcessing.clear()
                     }
-                    scheduledPacketProcessing.clear()
+
                 }
             }
         }.start()
@@ -42,7 +46,9 @@ object CommandsManager {
 
     @EventHandler
     fun onPacket(event: WebGuiPacketEvent) {
-        scheduledPacketProcessing.add(event)
+        packetProcessingLock.withLock {
+            scheduledPacketProcessing.add(event)
+        }
         lock.withLock {
             notifier.signal()
         }
@@ -61,7 +67,6 @@ object CommandsManager {
                     sender.sendMessage("Unknown command! Type \"help\" for commands list.", 0xFF5351)
                     return
                 }
-                println(split.joinToString(" "))
                 foundCommand.executeCommand(sender, split.subList(1, split.size).toTypedArray())
             } else {
                 sender.sendMessage("You just sent an empty command!", 0xFF5351)

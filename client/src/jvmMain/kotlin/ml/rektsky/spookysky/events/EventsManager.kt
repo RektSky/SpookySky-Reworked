@@ -1,5 +1,8 @@
 package ml.rektsky.spookysky.events
 
+import ml.rektsky.spookysky.Client
+import ml.rektsky.spookysky.utils.ChatColor
+import ml.rektsky.spookysky.webgui.WebGui
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
@@ -11,7 +14,12 @@ object EventsManager {
         for (listener in listeners) {
             for (method in listener.value) {
                 if (event.javaClass.isAssignableFrom(method.parameterTypes[0])) {
-                    method.invoke(listener.key, event)
+                    try {
+                        method.invoke(listener.key, event)
+                    } catch (e: Throwable) {
+                        WebGui.message("Error while processing event!", ChatColor.RED)
+                        Client.error(e)
+                    }
                 }
             }
         }

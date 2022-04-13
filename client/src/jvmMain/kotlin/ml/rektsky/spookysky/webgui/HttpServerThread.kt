@@ -1,7 +1,10 @@
 package ml.rektsky.spookysky.webgui
 
 import com.sun.net.httpserver.HttpServer
+import ml.rektsky.spookysky.Client
+import java.awt.Desktop
 import java.net.InetSocketAddress
+import java.net.URI
 
 object HttpServerThread: Thread("server-thread") {
 
@@ -40,6 +43,9 @@ object HttpServerThread: Thread("server-thread") {
             exchange.sendResponseHeaders(200, String(clientJs).length.toLong())
             exchange.responseBody.write(clientJs)
             exchange.responseBody.close()
+        }
+        if (!Client.debug) {
+            Desktop.getDesktop().browse(URI("http://127.0.0.1:${WebGui.guiPort}/index.html"))
         }
         server.start()
     }

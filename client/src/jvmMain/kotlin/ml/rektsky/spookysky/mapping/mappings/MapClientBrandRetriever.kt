@@ -5,13 +5,11 @@ import ml.rektsky.spookysky.mapping.MethodMapping
 
 object MapClientBrandRetriever: ClassMapping("ClientBrandRetriever") {
 
+    val mapGetClientModeName = MethodMapping(MapMinecraft,"getClientModName")
+
     fun getClientModName(): String {
-        return (MapGetClientModName.getReflectiveMethod()?.invoke(null) as String?)?:"Unknown";
+        return (mapGetClientModeName.getReflectiveMethod()?.invoke(null) as String?)?:"Unknown";
     }
 
 }
 
-
-object MapGetClientModName: MethodMapping(MapClientBrandRetriever, "getClientModName") {
-
-}

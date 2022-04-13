@@ -279,6 +279,7 @@ object TerminalHandler {
     }
 
     fun addMessage(message: String, color: Int) {
+        val message = message.replace("%BASE_URL%", window.location.hostname)
         var scroll = (terminalElement.scrollTop + terminalElement.offsetHeight) >= (terminalElement.scrollHeight)
         terminalElement.append(*createLine(message, color))
         if (scroll) {
@@ -296,13 +297,16 @@ object TerminalHandler {
             }
         }
     }
+    var httpRegex = Regex("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.][a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?\$")
 
     private fun createLine(message: String, color: Int): Array<HTMLElement> {
         val out = ArrayList<HTMLElement>()
         var index = 0
         for (line in message.lines()) {
             val element = document.create.span { +line }
-            element.innerHTML = element.innerHTML.replace(" ", "&nbsp;")
+            element.innerHTML = element.innerHTML.replace(" ", "&nbsp;").replace(httpRegex) {
+                "<a ${it.value}>${it.value}</a>"
+            }
             element.style.color = "#" + color.toString(16)
             out.add(element)
             index++
