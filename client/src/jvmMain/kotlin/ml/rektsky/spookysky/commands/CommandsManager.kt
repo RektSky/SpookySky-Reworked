@@ -28,17 +28,36 @@ object CommandsManager {
     @EventHandler
     fun onPacket(event: WebGuiPacketEvent) {
         val packet = event.packet
+        val sender = event.sender
         if (packet is PacketClientExecuteCommand) {
-            event.sender.send(PacketServerConsoleMessage("Executed command: ${packet.command}", 0x40A9F6))
+            val command = packet.command
+            val split = command.split(" ")
+            if (split.size > 0) {
+                val commandName = split[0]
+                val foundCommand = commands.firstOrNull { it.name == commandName || it.aliases.contains(commandName) }
+                if (foundCommand == null) {
+                    sender.sendMessage("Unknown command! Type \"help\" for commands list.", 0xFF5351)
+                    return
+                }
+                println(split.joinToString(" "))
+                foundCommand.executeCommand(sender, split.subList(1, split.size).toTypedArray())
+            } else {
+                sender.sendMessage("You just sent an empty command!", 0xFF5351)
+            }
         }
         if (packet is PacketClientRequestAutoComplete) {
-            if (packet.command.isNotEmpty()) {
-                event.sender.send(PacketServerAutoCompleteResponse(
-                    "Test ",
-                    "Fly ",
-                    "Speed ",
-                    "KillAura "
-                ))
+            val command = packet.command
+            if (command.isNotEmpty()) {
+                val split = command.split(" ")
+                if (split.size == 1) {
+                    sender.send(PacketServerAutoCompleteResponse(*commands.map { it.name }.filter { it.startsWith(split[0]) }.toTypedArray()))
+                    return
+                }
+                val commandName = split[0]
+                val foundCommand = commands.firstOrNull { it.name == commandName } ?: return
+                sender.send(PacketServerAutoCompleteResponse(*foundCommand.getAutoCompleteResult(sender, split.subList(1, split.size).toTypedArray())))
+            } else {
+                sender.send(PacketServerAutoCompleteResponse(*commands.map { it.name }.toTypedArray()))
             }
         }
     }

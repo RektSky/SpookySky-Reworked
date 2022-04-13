@@ -5,6 +5,7 @@ import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
 import ml.rektsky.spookysky.packets.impl.client.PacketClientExecuteCommand
 import ml.rektsky.spookysky.packets.impl.client.PacketClientRequestAutoComplete
 import ml.rektsky.spookysky.packets.impl.server.PacketServerAutoCompleteResponse
+import ml.rektsky.spookysky.packets.impl.server.PacketServerClearConsole
 import ml.rektsky.spookysky.packets.impl.server.PacketServerConsoleMessage
 import ml.rektsky.spookysky.utils.FriendlyByteBuffer
 
@@ -20,6 +21,7 @@ object PacketManager {
         registerPacket { PacketClientRequestAutoComplete() }
         registerPacket { PacketServerAutoCompleteResponse() }
         registerPacket { PacketServerConsoleMessage() }
+        registerPacket { PacketServerClearConsole() }
     }
 
     private fun registerPacket(supplier: () -> Packet) {

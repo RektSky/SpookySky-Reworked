@@ -6,15 +6,19 @@ abstract class Command(
     val name: String,
     val description: String,
     val usage: String,
-    val aliases: Array<String> = arrayOf()
+    vararg val aliases: String = arrayOf()
 ) {
 
     fun executeCommand(sender: WebGuiInstance, args: Array<String>) {
-
+        if (!onCommand(sender, args)) {
+            sender.sendMessage("Incorrect usage! Usage: $usage", 0xFF5351)
+        }
     }
 
     protected abstract fun onCommand(sender: WebGuiInstance, args: Array<String>): Boolean
-    abstract fun getAutoCompleteResult(sender: WebGuiInstance, args: Array<String>): Array<String>
+    open fun getAutoCompleteResult(sender: WebGuiInstance, args: Array<String>): Array<String> {
+        return arrayOf()
+    }
 
 
 }

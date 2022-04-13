@@ -37,9 +37,9 @@ class WebGuiInstance(private val socket: WebSocket) {
         return socket.remoteSocketAddress
     }
 
-    fun sendMessage(message: String) {
-        send(PacketCommonTextMessage().apply { this.message = message })
-        send(PacketServerConsoleMessage(message))
+    fun sendMessage(message: String, color: Int = 0xffffff) {
+        send(PacketCommonTextMessage().apply { this.message = message})
+        send(PacketServerConsoleMessage(message, color))
     }
 
 

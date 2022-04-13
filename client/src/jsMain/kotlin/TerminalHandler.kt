@@ -8,6 +8,7 @@ import ml.rektsky.spookysky.packets.Packet
 import ml.rektsky.spookysky.packets.impl.client.PacketClientExecuteCommand
 import ml.rektsky.spookysky.packets.impl.client.PacketClientRequestAutoComplete
 import ml.rektsky.spookysky.packets.impl.server.PacketServerAutoCompleteResponse
+import ml.rektsky.spookysky.packets.impl.server.PacketServerClearConsole
 import ml.rektsky.spookysky.packets.impl.server.PacketServerConsoleMessage
 import ml.rektsky.spookysky.utils.times
 import org.w3c.dom.*
@@ -29,6 +30,9 @@ object TerminalHandler {
     private var lastAutoCompleteQuery = ""
     private var lastAutoCompleteResult = ArrayList<String>()
     private var autoCompleteSelection = ""
+
+    private var currentHistoryIndex = -1
+    private var history = ArrayList<String>()
 
     var opened = false
         set(value) {
@@ -65,6 +69,13 @@ object TerminalHandler {
         })
         commandLineElement.addEventListener("keydown", listener@{
             if (it !is KeyboardEvent) return@listener
+            if (it.keyCode == 27) {
+                autoCompleteSelection = ""
+                suggestionsElement.hidden = true
+                lastAutoCompleteResult = ArrayList()
+                lastAutoCompleteQuery = commandLineElement.value // Here we temporarily disable AutoComplete
+                return@listener
+            }
             if (it.keyCode == 32) {
                 it.preventDefault()
                 commandLineElement.value += " "
@@ -75,17 +86,29 @@ object TerminalHandler {
                 return@listener
             }
             if (it.keyCode == 9 && autoCompleteSelection == "" && lastAutoCompleteResult.size == 0) {
-                lastAutoCompleteQuery = "" // Fetch it
+                lastAutoCompleteQuery = "*"*30 // Fetch it
                 return@listener
             }
             if (it.keyCode == 13 && commandLineElement.value != "" && autoCompleteSelection == "") {
                 sendCommand(commandLineElement.value)
+                history.add(0, commandLineElement.value)
+                currentHistoryIndex = -1
                 commandLineElement.value = ""
+                autoCompleteSelection = ""
+                suggestionsElement.hidden = true
+                lastAutoCompleteResult = ArrayList()
+                lastAutoCompleteQuery = commandLineElement.value // Here we temporarily disable AutoComplete
             }
             if ((it.keyCode == 13) && autoCompleteSelection != "") {
                 it.stopImmediatePropagation();
                 it.preventDefault()
-                commandLineElement.value += autoCompleteSelection
+                if (commandLineElement.value.endsWith(" ")) {
+                    commandLineElement.value += autoCompleteSelection
+                } else {
+                    commandLineElement.value = commandLineElement.value.split(" ")
+                        .let { it.subList(0, it.size - 1) }
+                        .joinToString(" ") + (if (commandLineElement.value.split(" ").size > 1) " " else "") + autoCompleteSelection
+                }
                 autoCompleteSelection = ""
                 suggestionsElement.hidden = true
                 lastAutoCompleteResult = ArrayList()
@@ -94,38 +117,54 @@ object TerminalHandler {
             if (it.keyCode == 38) {
                 it.stopImmediatePropagation();
                 it.preventDefault()
+                if (suggestionsElement.hidden && history.size > 0) {
+                    currentHistoryIndex = minOf(currentHistoryIndex + 1, history.size - 1)
+                    println(currentHistoryIndex)
+                    commandLineElement.value = history[currentHistoryIndex]
+                    commandLineElement.focus()
+                    commandLineElement.setSelectionRange(commandLineElement.value.length, commandLineElement.value.length)
+                    autoCompleteSelection = ""
+                    suggestionsElement.hidden = true
+                    lastAutoCompleteResult = ArrayList()
+                    lastAutoCompleteQuery = commandLineElement.value // Here we temporarily disable AutoComplete
+                    return@listener
+                }
                 if (lastAutoCompleteResult.size == 0) {
                     return@listener
                 }
                 var index = lastAutoCompleteResult.indexOf(autoCompleteSelection)
                 index = if (index - 1 < 0) lastAutoCompleteResult.size - 1 else index - 1
                 autoCompleteSelection = lastAutoCompleteResult[index]
-                for (i in 0 until suggestionsElement.children.asList().size) {
-                    var element = suggestionsElement.children[i]
-                    if (i != index) {
-                        element?.classList?.remove("selected-suggestion")
-                    } else {
-                        element?.classList?.add("selected-suggestion")
-                    }
-                }
+                refreshSelected(index)
             }
             if (it.keyCode == 9 || it.keyCode == 40) {
                 it.stopImmediatePropagation();
                 it.preventDefault()
+                if (suggestionsElement.hidden && history.size > 0 && it.keyCode == 40) {
+                    if (currentHistoryIndex - 1 < 0) {
+                        commandLineElement.value = ""
+                        currentHistoryIndex = -1
+                        return@listener
+                    }
+                    currentHistoryIndex = maxOf(0, currentHistoryIndex - 1)
+                    println(currentHistoryIndex)
+                    commandLineElement.value = history[currentHistoryIndex]
+                    commandLineElement.focus()
+                    commandLineElement.setSelectionRange(commandLineElement.value.length, commandLineElement.value.length)
+                    autoCompleteSelection = ""
+                    suggestionsElement.hidden = true
+                    lastAutoCompleteResult = ArrayList()
+                    lastAutoCompleteQuery = commandLineElement.value // Here we temporarily disable AutoComplete
+                    return@listener
+                }
+
                 if (lastAutoCompleteResult.size == 0) {
                     return@listener
                 }
                 var index = lastAutoCompleteResult.indexOf(autoCompleteSelection)
                 index = if (index + 1 >= lastAutoCompleteResult.size) 0 else index + 1
                 autoCompleteSelection = lastAutoCompleteResult[index]
-                for (i in 0 until suggestionsElement.children.asList().size) {
-                    var element = suggestionsElement.children[i]
-                    if (i != index) {
-                        element?.classList?.remove("selected-suggestion")
-                    } else {
-                        element?.classList?.add("selected-suggestion")
-                    }
-                }
+                refreshSelected(index)
             }
         })
         terminalOverlayElement.addEventListener("click", {
@@ -136,7 +175,7 @@ object TerminalHandler {
         })
 
         window.setInterval({
-            if (commandLineElement.value != "") {
+            if (commandLineElement.value != "" || true) {
                 if (lastAutoCompleteQuery != commandLineElement.value) {
                     lastAutoCompleteQuery = commandLineElement.value
                     NetworkManager.sendPacket(PacketClientRequestAutoComplete(commandLineElement.value))
@@ -158,6 +197,10 @@ object TerminalHandler {
     }
 
     fun handlePacket(packet: Packet) {
+        if (packet is PacketServerClearConsole) {
+            clearConsole()
+            return
+        }
         if (packet is PacketServerConsoleMessage) {
             val date = Date()
 
@@ -175,6 +218,8 @@ object TerminalHandler {
         if (packet is PacketServerAutoCompleteResponse) {
             if (packet.suggestions.size == 0) {
                 suggestionsElement.hidden = true
+                lastAutoCompleteResult = ArrayList()
+                autoCompleteSelection = ""
             } else {
                 suggestionsElement.hidden = false
                 suggestionsElement.innerHTML = ""
@@ -197,7 +242,8 @@ object TerminalHandler {
                     }
                 }
                 if (!hasMatch) {
-                    autoCompleteSelection = ""
+                    autoCompleteSelection = packet.suggestions[0]
+                    refreshSelected(0)
                 }
                 lastAutoCompleteResult = packet.suggestions
             }
@@ -219,6 +265,7 @@ object TerminalHandler {
     }
 
     fun sendCommand(command: String) {
+        addLocalMessage(command, 0x646464)
         NetworkManager.sendPacket(PacketClientExecuteCommand(command))
     }
 
@@ -234,11 +281,23 @@ object TerminalHandler {
         }
     }
 
+    private fun refreshSelected(index: Int) {
+        for (i in 0 until suggestionsElement.children.asList().size) {
+            var element = suggestionsElement.children[i]
+            if (i != index) {
+                element?.classList?.remove("selected-suggestion")
+            } else {
+                element?.classList?.add("selected-suggestion")
+            }
+        }
+    }
+
     private fun createLine(message: String, color: Int): Array<HTMLElement> {
         val out = ArrayList<HTMLElement>()
         var index = 0
         for (line in message.lines()) {
             val element = document.create.span { +line }
+            element.innerHTML = element.innerHTML.replace(" ", "&nbsp;")
             element.style.color = "#" + color.toString(16)
             out.add(element)
             index++
