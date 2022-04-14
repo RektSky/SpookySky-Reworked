@@ -10,6 +10,7 @@ import ml.rektsky.spookysky.processor.impl.templates.MapperStringSearcher
 import ml.rektsky.spookysky.utils.ChatColor
 import ml.rektsky.spookysky.utils.DescriptorUtil
 import org.objectweb.asm.tree.LdcInsnNode
+import org.objectweb.asm.tree.TypeInsnNode
 import java.lang.reflect.Modifier
 
 class MapperWorld: MapperStringSearcher("checkLight", MapWorld) {
@@ -19,10 +20,11 @@ class MapperWorld: MapperStringSearcher("checkLight", MapWorld) {
         if (MapWorld.isMapped()) {
             Client.debug("Hello: ${MapWorld.mapped!!.classNode.name}", ChatColor.GREEN)
             for (methodNode in loadedClass.classNode.methods.filter {
-                it.instructions.any { it is LdcInsnNode && it.cst == "checkLight" }
+                it.instructions.any { it is LdcInsnNode && it.cst == "checkLight" } &&
+                it.instructions.none { it is TypeInsnNode && it.desc.contains("CallbackInfoReturnable") }
             }) {
                 Client.debug("Found ${methodNode.name}")
-                if (Modifier.isPublic(methodNode.access)) {
+                if (!methodNode.desc.startsWith("(II")) {
                     MapWorld.mapSetBlockState.mapped = methodNode
                     Client.debug("BlockPos: ${DescriptorUtil.getParameterTypeNames(methodNode.desc)[0]}")
                     Client.debug("IBlockState: ${DescriptorUtil.getParameterTypeNames(methodNode.desc)[1]}")

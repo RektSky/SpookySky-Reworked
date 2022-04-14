@@ -55,14 +55,14 @@ open class Entity(val original: Any) {
     }
     
     fun distanceTo(x: Double?, y: Double?, z: Double?): Double {
-        if (
-            posX == null || x == null ||
-            posY == null || y == null ||
-            posZ == null || z == null
-        ) return Double.MAX_VALUE
-        val deltaX = posX!! - x
-        val deltaY = posY!! - y
-        val deltaZ = posZ!! - z
+//        if (
+//            posX == null || x == null ||
+//            posY == null || y == null ||
+//            posZ == null || z == null
+//        ) return Double.MAX_VALUE
+        val deltaX = posX!! - x!!
+        val deltaY = posY!! - y!!
+        val deltaZ = posZ!! - z!!
         return sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ)
     }
 
