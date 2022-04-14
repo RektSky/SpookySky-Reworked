@@ -2,9 +2,9 @@ package ml.rektsky.spookysky.utils
 
 object DescriptorUtil {
 
-    fun getReturnType(descriptor: String): Class<*>? {
+    fun getReturnType(descriptor: String): String {
         val s = descriptor.split("\\)".toRegex()).toTypedArray()[1]
-        return descriptorToClass(s)
+        return s
     }
 
     fun getParameterTypes(descriptor: String): List<Class<*>> {

@@ -1,9 +1,18 @@
 package ml.rektsky.spookysky.modules.impl.combat
 
+import ml.rektsky.spookysky.Client
+import ml.rektsky.spookysky.events.EventHandler
+import ml.rektsky.spookysky.events.impl.game.Render2DEvent
+import ml.rektsky.spookysky.mapping.mappings.Minecraft
+import ml.rektsky.spookysky.mapping.mappings.lwjgl.Mouse
 import ml.rektsky.spookysky.module.Category
+import ml.rektsky.spookysky.module.settings.impl.NumberSetting
 import ml.rektsky.spookysky.modules.Module
+import ml.rektsky.spookysky.utils.Timer
+import java.lang.Double.*
 import java.lang.reflect.Field
 import java.nio.ByteBuffer
+import kotlin.random.Random
 
 class AutoClicker: Module(
     "AutoClicker",
@@ -11,8 +20,14 @@ class AutoClicker: Module(
     Category.COMBAT
 ) {
 
-    private val cps = 0.0
+    val cpsMinSetting: NumberSetting = NumberSetting("CPS Min", 10, 0.1, 1, 40)
+    val cpsMaxSetting: NumberSetting = NumberSetting("CPS Max", 10, 0.1, 1, 40)
+
+    private var cps = 0.0
     private var isClicked = false
+
+    private var timer: Timer = Timer()
+    private var cpsResetTimer: Timer = Timer()
 
     override fun onDisable() {
 
@@ -22,26 +37,43 @@ class AutoClicker: Module(
 
     }
 
-    fun click() {
-//        val bufferField: Field = Mouse.getMouseClass().getDeclaredField("readBuffer")
-//        bufferField.setAccessible(true)
-//        val buffer: ByteBuffer = bufferField.get(null) as ByteBuffer // Static field
-//
-//        val newBuffer: ByteBuffer = ByteBuffer.allocate(102400)
-//        newBuffer.put(buffer)
-//        newBuffer.put(0.toByte()) // Left click
-//
-//        newBuffer.put((if (!isClicked.also { isClicked = it }) 0 else 1).toByte())
-//        newBuffer.putInt(0) // Dynamic X
-//
-//        newBuffer.putInt(0) // Dynamic Y
-//
-//        newBuffer.putInt(0) // Dynamic Wheel
-//
-//        newBuffer.putLong(System.nanoTime()) // event_nanos
-//
-//        newBuffer.flip()
-//        bufferField.set(null, newBuffer)
+    @EventHandler
+    fun onUpdateMouse(event: Render2DEvent) {
+        if (cpsResetTimer.checkAndReset(1000)) {
+            cps = Random(System.currentTimeMillis()).nextDouble(max(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble()) - min(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble()))+
+                    min(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble())
+            Client.debug(cps.toString())
+        }
+        if (timer.checkAndReset((500 / cps).toLong())) {
+            click()
+        }
     }
+
+    fun click() {
+//        val bufferField: Field = Mouse.mapped!!.getReflectionClass().getDeclaredField("readBuffer")
+//        bufferField.isAccessible = true
+//        val buffer = bufferField[null] as ByteBuffer
+//        val newBuffer = ByteBuffer.allocate(1100)
+//        newBuffer.put(buffer)
+//        isClicked = !isClicked
+//        if (isClicked) {
+//            addToBuffer(newBuffer, 0, 1, 0, 0, 0)
+//        } else {
+//            addToBuffer(newBuffer, 0, 0, 0, 0, 0)
+//        }
+//        bufferField[null] = newBuffer
+        Minecraft.getMinecraft()?.clickMouse()
+    }
+
+    private fun addToBuffer(buffer: ByteBuffer, button: Int, action: Int, cursorX: Int, cursorY: Int, wheel: Int) {
+        buffer.put(button.toByte())
+        buffer.put(action.toByte())
+        buffer.putInt(cursorX)
+        buffer.putInt(cursorY)
+        buffer.putInt(wheel)
+        buffer.putLong(System.nanoTime())
+        buffer.flip()
+    }
+
 
 }

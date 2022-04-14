@@ -1,7 +1,6 @@
 package ml.rektsky.spookysky.processor.impl.mapper
 
-import ml.rektsky.spookysky.Client
-import ml.rektsky.spookysky.mapping.mappings.MapMinecraft
+import ml.rektsky.spookysky.mapping.mappings.Minecraft
 import ml.rektsky.spookysky.processor.LoadedClass
 import ml.rektsky.spookysky.processor.Processor
 import org.objectweb.asm.tree.LdcInsnNode
@@ -13,14 +12,14 @@ const val magicText = "Manually triggered debug crash"
 class PRunTickMapper: Processor() {
 
     init {
-        dependsOn(MapMinecraft)
+        dependsOn(Minecraft)
     }
 
 
     override fun process0(loadedClass: LoadedClass) {
         for (method in loadedClass.classNode.methods) {
             if (method.instructions.any {it is LdcInsnNode && it.cst == magicText}) {
-                MapMinecraft.mapRunTick.mapped = method
+                Minecraft.mapRunTick.mapped = method
                 return
             }
         }
@@ -31,7 +30,7 @@ class PRunTickMapper: Processor() {
     }
 
     override fun jobDone(): Boolean {
-        return MapMinecraft.mapRunTick.isMapped()
+        return Minecraft.mapRunTick.isMapped()
     }
 
 

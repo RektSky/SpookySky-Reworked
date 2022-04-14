@@ -99,6 +99,9 @@ abstract class Processor {
 
     private var done = false
 
+    private var initializationTime = System.currentTimeMillis()
+    // Avoid lunar hash check
+
     val thread = Thread {
         while (true) {
             var failed = false
@@ -115,6 +118,7 @@ abstract class Processor {
         Client.debug(" - Every dependency of " + javaClass.simpleName + " has been resolved! Processing...")
         while (!isJobDone()) {
             while (scheduledRedefine.isNotEmpty()) {
+                if (System.currentTimeMillis() - initializationTime < 10000) break
                 val reDef = scheduledRedefine.first()
                 if (reDef.execute()) {
                     Client.debug("${reDef.loadedClass.classNode.name} has been marked as done!")
@@ -139,6 +143,9 @@ abstract class Processor {
             Thread.sleep(100)
         }
         while (scheduledRedefine.isNotEmpty()) {
+            if (System.currentTimeMillis() - initializationTime < 10000) {
+                Thread.sleep(10000 - System.currentTimeMillis() + initializationTime)
+            }
             val reDef = scheduledRedefine.first()
             if (reDef.execute()) {
                 Client.debug("${reDef.loadedClass.classNode.name} has been marked as done!")
@@ -172,9 +179,13 @@ abstract class Processor {
 
     protected fun requestRedefineClass(classNode: ClassNode) {
         val loadedClass = ProcessorManager.getClasses()[classNode.name]!!
-        if (!CustomClassDef(loadedClass).execute()) {
-            Client.debug("Class ${classNode.name} is not loaded yet! Adding to queue...")
-            scheduledRedefine.add(CustomClassDef(loadedClass))
+        if (ProcessorManager.transforming?.classNode != classNode) {
+            if (!CustomClassDef(loadedClass).execute()) {
+                Client.debug("Class ${classNode.name} is not loaded yet! Adding to queue... (transforming: ${ProcessorManager.transforming?.classNode?.name}")
+                scheduledRedefine.add(CustomClassDef(loadedClass))
+            } else {
+//                println(Thread.currentThread().stackTrace.joinToString("\n"))
+            }
         }
     }
 
@@ -194,7 +205,15 @@ abstract class Processor {
 
     fun process(node: LoadedClass) {
         if (node.classNode.name.startsWith("ml/rektsky/spookysky")) return
-        processQueue.add(node)
+        for (dependency in dependencies) {
+            if (!dependency.isMapped()) {
+                processQueue.add(node)
+                return
+            }
+        }
+        if (shouldProcess(node)) {
+            process0(node)
+        }
     }
 
     internal fun start() {

@@ -4,6 +4,7 @@ import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.mapping.ClassMapping
 import ml.rektsky.spookysky.mapping.Mapping
 import ml.rektsky.spookysky.utils.ASMUtils
+import ml.rektsky.spookysky.utils.ASMUtils.compile
 import ml.rektsky.spookysky.utils.ClassUtils
 import org.objectweb.asm.tree.ClassNode
 import java.lang.instrument.ClassFileTransformer
@@ -20,6 +21,7 @@ object ProcessorManager {
     val mappings = ArrayList<ClassMapping>()
 
 
+    var transforming: LoadedClass? = null
     private val classesLock = ReentrantLock()
     private val classes = HashMap<String, LoadedClass>()
 
@@ -82,6 +84,7 @@ object ProcessorManager {
                 }
                 classes[className!!] = loadedClass
             }
+            transforming = loadedClass
             for (processor in processors) {
                 if (!processor.isJobDone()) {
                     processor.process(loadedClass)
@@ -91,7 +94,8 @@ object ProcessorManager {
                     function(loadedClass)
                 }
             }
-            return classfileBuffer
+            transforming = null
+            return loadedClass.classNode.compile()
         }
 
     }
@@ -106,7 +110,7 @@ data class LoadedClass(
 ) {
     
     fun getReflectionClass(): Class<*> {
-        return Class.forName(classNode.name.replace("/", "."))
+        return Class.forName(classNode.name.replace("/", "."), false, classLoader)
     }
 
     override fun equals(other: Any?): Boolean {

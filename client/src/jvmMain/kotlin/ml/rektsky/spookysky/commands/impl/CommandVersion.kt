@@ -1,7 +1,7 @@
 package ml.rektsky.spookysky.commands.impl
 
 import ml.rektsky.spookysky.commands.Command
-import ml.rektsky.spookysky.mapping.mappings.MapClientBrandRetriever
+import ml.rektsky.spookysky.mapping.mappings.ClientBrandRetriever
 import ml.rektsky.spookysky.webgui.WebGuiInstance
 
 class CommandVersion: Command(
@@ -10,7 +10,7 @@ class CommandVersion: Command(
     "version"
 ) {
     override fun onCommand(sender: WebGuiInstance, args: Array<String>): Boolean {
-        sender.sendMessage("Current Client Brand: ${MapClientBrandRetriever.getClientModName()}")
+        sender.sendMessage("Current Client Brand: ${ClientBrandRetriever.getClientModName()}")
         return true
     }
 }
