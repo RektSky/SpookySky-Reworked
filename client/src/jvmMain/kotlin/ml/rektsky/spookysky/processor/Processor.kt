@@ -25,48 +25,54 @@ class CustomClassDef(
     val node: ClassNode
 ) {
     fun execute(): Boolean {
+        Client.debug("Trying to execute...")
         try {
             val clazz = Class.forName(node.name.replace("/", "."))
             var compileResult: ByteArray
-            try {
-                compileResult = node.compile()
-                var illegal = false
-                CheckClassAdapter.verify(ClassReader(compileResult), false, PrintWriter(
-                    object: OutputStream() {
-                        override fun write(b: Int) {
-                            illegal = true
+            compileResult = node.compile()
+            if (false) {
+                try {
+                    var illegal = false
+                    CheckClassAdapter.verify(ClassReader(compileResult), false, PrintWriter(
+                        object: OutputStream() {
+                            override fun write(b: Int) {
+                                illegal = true
+                            }
+                        }))
+                    if (illegal) {
+                        val out = ByteArrayOutputStream()
+                        CheckClassAdapter.verify(ClassReader(compileResult), false, PrintWriter(out))
+                        val message = out.toString("utf-8")
+                        Client.error(IllegalStateException("Failed to verify class: Invalid class detected"))
+                        Client.debug("Failed to verify class! Forcing it to redefine will most likely crash the JVM!", ChatColor.RED)
+                        for (s in message.split("\n")) {
+                            Client.debug(s, ChatColor.RED)
                         }
-                    }))
-                if (illegal) {
-                    val out = ByteArrayOutputStream()
-                    CheckClassAdapter.verify(ClassReader(compileResult), false, PrintWriter(out))
-                    val message = out.toString("utf-8")
-                    Client.error(IllegalStateException("Failed to verify class: Invalid class detected"))
-                    Client.debug("Failed to verify class! Forcing it to redefine will most likely crash the JVM!", ChatColor.RED)
-                    for (s in message.split("\n")) {
-                        Client.debug(s, ChatColor.RED)
+                        Client.debug("")
+                        Client.debug("Class being redefined: ${clazz.name}", ChatColor.RED)
+                        Client.debug("")
+                        Client.debug("If you want to download the invalid class, please download it in the link below", ChatColor.RED)
+                        val url = "/invalid-bytecode-" + UUID.randomUUID() + "/" + clazz.name + ".class"
+                        HttpServerThread.server.createContext(url) {
+                            it.sendResponseHeaders(200, compileResult.size.toLong())
+                            it.responseBody.write(compileResult)
+                            it.responseBody.close()
+                        }
+                        Client.debug("%BASE_URL%$url", ChatColor.RED)
+                        return false
                     }
-                    Client.debug("")
-                    Client.debug("Class being redefined: ${clazz.name}", ChatColor.RED)
-                    Client.debug("")
-                    Client.debug("If you want to download the invalid class, please download it in the link below", ChatColor.RED)
-                    val url = "/invalid-bytecode-" + UUID.randomUUID() + "/" + clazz.name + ".class"
-                    HttpServerThread.server.createContext(url) {
-                        it.sendResponseHeaders(200, compileResult.size.toLong())
-                        it.responseBody.write(compileResult)
-                        it.responseBody.close()
-                    }
-                    Client.debug("%BASE_URL%$url", ChatColor.RED)
-                    return false
+                } catch (e: Throwable) {
+                    Client.error(e)
+                    throw e
                 }
-            } catch (e: Throwable) {
-                Client.error(e)
-                throw e
             }
+
             Client.instrumentation.redefineClasses(ClassDefinition(clazz, compileResult))
             Client.debug(" - Redefined ${clazz.simpleName}")
             return true
-        } catch (ignored: Exception) {
+        } catch (ignored: Throwable) {
+            Client.error(ignored)
+//            ignored.printStackTrace()
             return false
         }
     }
@@ -105,10 +111,14 @@ abstract class Processor {
         Client.debug(" - Every dependency of " + javaClass.simpleName + " has been resolved! Processing...")
         while (!isJobDone()) {
             while (scheduledRedefine.isNotEmpty()) {
+                Client.debug("Before: ${scheduledRedefine.size}")
                 val reDef = scheduledRedefine.first()
+                Client.debug("After A: ${scheduledRedefine.size}")
                 if (reDef.execute()) {
+                    Client.debug("${reDef.node.name} has been marked as done!")
                     scheduledRedefine.removeFirst()
                 }
+                Client.debug("After B: ${scheduledRedefine.size}")
             }
             while (processQueue.isNotEmpty()) {
                 try {
@@ -128,11 +138,14 @@ abstract class Processor {
             Thread.sleep(100)
         }
         while (scheduledRedefine.isNotEmpty()) {
+            Client.debug("Before: ${scheduledRedefine.size}")
             val reDef = scheduledRedefine.first()
+            Client.debug("After A: ${scheduledRedefine.size}")
             if (reDef.execute()) {
+                Client.debug("${reDef.node.name} has been marked as done!")
                 scheduledRedefine.removeFirst()
             }
-            Thread.sleep(100)
+            Client.debug("After B: ${scheduledRedefine.size}")
         }
     }
 
@@ -160,11 +173,8 @@ abstract class Processor {
     }
 
     protected fun requestRedefineClass(classNode: ClassNode) {
-        try {
-            val clazz = Class.forName(classNode.name.replace("/", "."))
-            val compileResult = classNode.compile()
-            Client.instrumentation.redefineClasses(ClassDefinition(clazz, compileResult))
-        } catch (e: Throwable) {
+        if (!CustomClassDef(classNode).execute()) {
+            Client.debug("Class ${classNode.name} is not loaded yet! Adding to queue...")
             scheduledRedefine.add(CustomClassDef(classNode))
         }
     }

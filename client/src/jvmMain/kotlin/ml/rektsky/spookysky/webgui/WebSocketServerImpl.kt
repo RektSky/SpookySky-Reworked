@@ -12,7 +12,7 @@ import java.net.InetSocketAddress
 class WebSocketServerImpl(port: Int): WebSocketServer(InetSocketAddress("0.0.0.0", port)) {
 
     var webGuiInstances: HashMap<WebSocket, WebGuiInstance>? = HashMap()
-    // Execuse me, why is it null?? KOTLIN??
+    // excuse me, why is it null?? KOTLIN??
 
     init {
         Client.addConsoleMessage("Attempting to start WebSocket Server")
@@ -38,7 +38,8 @@ class WebSocketServerImpl(port: Int): WebSocketServer(InetSocketAddress("0.0.0.0
         if (webGuiInstances == null) {
             webGuiInstances = HashMap()
         }
-        WebGui.onPacket(PacketManager.read(message!!.decodeBase64ToArray()!!), webGuiInstances!![conn]!!)
+
+        WebGui.onPacket(PacketManager.read(message!!), webGuiInstances!![conn]!!)
     }
 
     override fun onError(conn: WebSocket?, ex: Exception?) {

@@ -28,7 +28,6 @@ class MRunTickHooker: Processor() {
         val methodNode = MapMinecraft.mapRunTick.mapped!!
         val classNode = MapMinecraft.mapped!!.classNode
 
-
         methodNode.instructions.insert(Event.generateEventCallingInstructions(ClientTickEvent::class.java))
 
         Client.debug("Successfully hooked TickEvent!")

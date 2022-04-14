@@ -28,8 +28,14 @@ object PacketManager {
         registered[supplier()::class.simpleName.hashCode()] = supplier
     }
 
-    fun read(bytes: ByteArray): Packet {
-        val buffer = FriendlyByteBuffer(bytes)
+    fun read(inputData: String): Packet {
+        val byteBuffer = ByteArray(inputData.length)
+        var position = 0
+        for (c in inputData) {
+            byteBuffer[position] = c.toByte()
+            position += 1
+        }
+        val buffer = FriendlyByteBuffer(byteBuffer)
         buffer.flip()
         val id = buffer.nextInt()
         val supplier = registered[id]
@@ -38,7 +44,7 @@ object PacketManager {
         return packet
     }
 
-    fun write(packet: Packet): ByteArray {
+    fun write(packet: Packet): String {
         val data = FriendlyByteBuffer(ByteArray(8192))
         val packetId = packet::class.simpleName.hashCode()
         if (registered[packetId] == null) {
@@ -46,7 +52,11 @@ object PacketManager {
         }
         data.putInt(packetId)
         packet.write(data)
-        return data.getArray()
+        var stringBuffer = ""
+        for (byte in data.getArray()) {
+            stringBuffer += byte.toInt().toChar()
+        }
+        return stringBuffer
     }
 
 }

@@ -68,8 +68,6 @@ object ModulesManager {
                     return
                 }
                 if (localModule.toggled != remoteModule.toggled) {
-                    WebGui.message("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
-                    Client.addConsoleMessage("${remoteModule.name} has been ${if (remoteModule.toggled) "enabled" else "disabled"} by ${event.sender.getIP()}")
                     localModule.toggled = remoteModule.toggled
                 }
                 for (localRemoteSetting in localModule.settings.zip(remoteModule.settings)) {

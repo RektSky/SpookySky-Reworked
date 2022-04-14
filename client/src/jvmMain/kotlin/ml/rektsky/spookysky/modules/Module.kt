@@ -1,5 +1,6 @@
 package ml.rektsky.spookysky.modules
 
+import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.events.impl.client.PreModuleToggleEvent
 import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.module.Category
@@ -22,7 +23,13 @@ abstract class Module(
         set(value) {
             PreModuleToggleEvent(this, !field, value).callEvent()
             field = value
-            if (value) onEnable() else onDisable()
+            if (value) {
+                EventsManager.register(this)
+                onEnable()
+            } else {
+                EventsManager.unregister(this)
+                onDisable()
+            }
         }
 
     protected abstract fun onDisable()

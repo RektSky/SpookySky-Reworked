@@ -25,13 +25,15 @@ class WebGuiInstance(private val socket: WebSocket) {
         Client.addConsoleMessage("[${socket.remoteSocketAddress}] Sent modules update to client!")
         sendMessage("Connected as $${getIP()}")
 
-        for (message in WebGui.log) {
+        for (message in ArrayList(WebGui.log)) {
+            if (message == null) continue
+            // excuse me, why is it null?? KOTLIN??
             sendMessage(message.message, message.color)
         }
     }
 
     fun send(packet: Packet) {
-        socket.send(PacketManager.write(packet).encodeBase64())
+        socket.send(PacketManager.write(packet))
     }
 
     fun close() {

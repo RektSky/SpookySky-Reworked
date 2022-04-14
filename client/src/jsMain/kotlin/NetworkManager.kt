@@ -32,12 +32,12 @@ object NetworkManager {
             if (it.data is Blob) {
                 (js("it.data.text()") as Promise<String>).then { data ->
                     debug("Got blob message: ${data}")
-                    onPacket(PacketManager.read(data.decodeBase64ToArray()!!))
+                    onPacket(PacketManager.read(data))
                     debug("[NetworkManager] Processed packet: ${it.data.toString()}")
                 }
 //
             } else if (it.data is String) {
-                onPacket(PacketManager.read((it.data as String).decodeBase64ToArray()!!))
+                onPacket(PacketManager.read((it.data as String)))
                 debug("[NetworkManager] Processed packet: ${it.data.toString()}")
             } else {
                 throw IllegalStateException("Got unknown websocket data! ")
@@ -67,8 +67,8 @@ object NetworkManager {
     fun sendPacket(packet: Packet) {
         debug("[NetworkManager] Attempting to send packet with type ${packet::class.simpleName}")
         val original = PacketManager.write(packet)
-        val rawData = original.encodeBase64()
-        if (!rawData.decodeBase64ToArray().contentEquals(original)) {
+        val rawData = original
+        if (!rawData.contentEquals(original)) {
             console.error("[NetworkManager] Assert failed! Original byte array is not equal to decoded.")
         }
         debug("[NetworkManager] Attempting to send $rawData")

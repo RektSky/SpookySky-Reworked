@@ -251,6 +251,7 @@ object TerminalHandler {
                     refreshSelected(0)
                 }
                 lastAutoCompleteResult = packet.suggestions
+                terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
             }
         }
     }
@@ -279,7 +280,7 @@ object TerminalHandler {
     }
 
     fun addMessage(message: String, color: Int) {
-        val message = message.replace("%BASE_URL%", window.location.hostname)
+        val message = message.replace("%BASE_URL%", "http://" + window.location.host)
         var scroll = (terminalElement.scrollTop + terminalElement.offsetHeight) >= (terminalElement.scrollHeight)
         terminalElement.append(*createLine(message, color))
         if (scroll) {

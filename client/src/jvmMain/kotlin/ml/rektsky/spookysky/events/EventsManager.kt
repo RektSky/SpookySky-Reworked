@@ -11,8 +11,8 @@ object EventsManager {
     private val listeners = HashMap<Any, ArrayList<Method>>()
 
     fun callEvent(event: Event) {
-        for (listener in listeners) {
-            for (method in listener.value) {
+        for (listener in HashMap(listeners)) {
+            for (method in ArrayList(listener.value)) {
                 if (event.javaClass.isAssignableFrom(method.parameterTypes[0])) {
                     try {
                         method.invoke(listener.key, event)

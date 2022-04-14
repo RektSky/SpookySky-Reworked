@@ -26,7 +26,7 @@ object WebGui {
     }
 
     fun broadcastPacket(packet: Packet) {
-        socketServer.broadcast(PacketManager.write(packet).encodeBase64ToByteArray())
+        socketServer.broadcast(PacketManager.write(packet))
     }
 
     fun message(message: String, color: Int = 0xffffff, perm: Boolean = false) {

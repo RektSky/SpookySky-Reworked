@@ -13,7 +13,7 @@ class Test: Module("Test", "A module for testing in MISC category", Category.MIS
 
     @EventHandler
     fun onTick(event: ClientTickEvent) {
-        Client.debug("Tick!")
+        WebGui.message("Tick!")
     }
 
 
