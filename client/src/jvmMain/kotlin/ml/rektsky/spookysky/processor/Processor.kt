@@ -2,11 +2,9 @@ package ml.rektsky.spookysky.processor
 
 import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.mapping.Mapping
-import ml.rektsky.spookysky.utils.ASMUtils
 import ml.rektsky.spookysky.utils.ASMUtils.compile
 import ml.rektsky.spookysky.utils.ChatColor
 import ml.rektsky.spookysky.webgui.HttpServerThread
-import ml.rektsky.spookysky.webgui.WebGui
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.util.CheckClassAdapter
@@ -22,14 +20,23 @@ import kotlin.collections.HashMap
 import kotlin.concurrent.withLock
 
 class CustomClassDef(
-    val node: ClassNode
+    val loadedClass: LoadedClass
 ) {
+
+    fun getReflectiveClass(): Class<*>? {
+        return try {
+            Class.forName(loadedClass.classNode.name.replace("/", "."), false, loadedClass.classLoader)
+        } catch (ignored: Throwable) {
+            null
+        }
+    }
+
     fun execute(): Boolean {
-        Client.debug("Trying to execute...")
         try {
-            val clazz = Class.forName(node.name.replace("/", "."))
+            val clazz = getReflectiveClass()
+            if (clazz == null) return false
             var compileResult: ByteArray
-            compileResult = node.compile()
+            compileResult = this.loadedClass.classNode.compile()
             if (false) {
                 try {
                     var illegal = false
@@ -62,7 +69,6 @@ class CustomClassDef(
                         return false
                     }
                 } catch (e: Throwable) {
-                    Client.error(e)
                     throw e
                 }
             }
@@ -71,8 +77,6 @@ class CustomClassDef(
             Client.debug(" - Redefined ${clazz.simpleName}")
             return true
         } catch (ignored: Throwable) {
-            Client.error(ignored)
-//            ignored.printStackTrace()
             return false
         }
     }
@@ -111,14 +115,11 @@ abstract class Processor {
         Client.debug(" - Every dependency of " + javaClass.simpleName + " has been resolved! Processing...")
         while (!isJobDone()) {
             while (scheduledRedefine.isNotEmpty()) {
-                Client.debug("Before: ${scheduledRedefine.size}")
                 val reDef = scheduledRedefine.first()
-                Client.debug("After A: ${scheduledRedefine.size}")
                 if (reDef.execute()) {
-                    Client.debug("${reDef.node.name} has been marked as done!")
+                    Client.debug("${reDef.loadedClass.classNode.name} has been marked as done!")
                     scheduledRedefine.removeFirst()
                 }
-                Client.debug("After B: ${scheduledRedefine.size}")
             }
             while (processQueue.isNotEmpty()) {
                 try {
@@ -138,14 +139,11 @@ abstract class Processor {
             Thread.sleep(100)
         }
         while (scheduledRedefine.isNotEmpty()) {
-            Client.debug("Before: ${scheduledRedefine.size}")
             val reDef = scheduledRedefine.first()
-            Client.debug("After A: ${scheduledRedefine.size}")
             if (reDef.execute()) {
-                Client.debug("${reDef.node.name} has been marked as done!")
+                Client.debug("${reDef.loadedClass.classNode.name} has been marked as done!")
                 scheduledRedefine.removeFirst()
             }
-            Client.debug("After B: ${scheduledRedefine.size}")
         }
     }
 
@@ -173,9 +171,10 @@ abstract class Processor {
     }
 
     protected fun requestRedefineClass(classNode: ClassNode) {
-        if (!CustomClassDef(classNode).execute()) {
+        val loadedClass = ProcessorManager.getClasses()[classNode.name]!!
+        if (!CustomClassDef(loadedClass).execute()) {
             Client.debug("Class ${classNode.name} is not loaded yet! Adding to queue...")
-            scheduledRedefine.add(CustomClassDef(classNode))
+            scheduledRedefine.add(CustomClassDef(loadedClass))
         }
     }
 

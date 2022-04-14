@@ -34,6 +34,8 @@ object TerminalHandler {
     private var currentHistoryIndex = -1
     private var history = ArrayList<String>()
 
+    private var autoScrollTime = 0.0
+
     var opened = false
         set(value) {
             if (field != value) {
@@ -41,6 +43,7 @@ object TerminalHandler {
                 if (field) {
                     terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
                     terminalWindowElement.hidden = false
+                    autoScrollTime = Date.now()
                 } else {
                     terminalWindowElement.hidden = true
                 }
@@ -251,7 +254,6 @@ object TerminalHandler {
                     refreshSelected(0)
                 }
                 lastAutoCompleteResult = packet.suggestions
-                terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
             }
         }
     }
@@ -283,7 +285,7 @@ object TerminalHandler {
         val message = message.replace("%BASE_URL%", "http://" + window.location.host)
         var scroll = (terminalElement.scrollTop + terminalElement.offsetHeight) >= (terminalElement.scrollHeight)
         terminalElement.append(*createLine(message, color))
-        if (scroll) {
+        if (scroll || Date.now() - autoScrollTime < 100) {
             terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
         }
     }

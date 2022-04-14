@@ -24,7 +24,7 @@ class CommandProcessors: Command(
             sender.sendMessage("    Job Done: ${processor.isJobDone()}", if (processor.isJobDone()) ChatColor.GREEN else ChatColor.RED)
             sender.sendMessage("    Schedule Redefines:")
             for (customClassDef in processor.scheduledRedefine) {
-                sender.sendMessage("        ${customClassDef.node.name}")
+                sender.sendMessage("        ${customClassDef.loadedClass.classNode.name}")
             }
             sender.sendMessage("")
         }

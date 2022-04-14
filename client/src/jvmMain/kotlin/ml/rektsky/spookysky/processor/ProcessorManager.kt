@@ -4,10 +4,8 @@ import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.mapping.ClassMapping
 import ml.rektsky.spookysky.mapping.Mapping
 import ml.rektsky.spookysky.utils.ASMUtils
-import ml.rektsky.spookysky.utils.ASMUtils.compile
 import ml.rektsky.spookysky.utils.ClassUtils
 import org.objectweb.asm.tree.ClassNode
-import java.lang.instrument.ClassDefinition
 import java.lang.instrument.ClassFileTransformer
 import java.lang.reflect.Modifier
 import java.security.ProtectionDomain
@@ -76,7 +74,7 @@ object ProcessorManager {
             classfileBuffer: ByteArray?
         ): ByteArray {
             val node = ASMUtils.decompile(classfileBuffer!!)
-            val loadedClass = LoadedClass(node, classfileBuffer)
+            val loadedClass = LoadedClass(node, classfileBuffer, loader!!)
             classesLock.withLock {
                 if (className in classes) {
                     classes[className!!] = loadedClass
@@ -103,7 +101,8 @@ object ProcessorManager {
 
 data class LoadedClass(
     val classNode: ClassNode,
-    val rawData: ByteArray
+    val rawData: ByteArray,
+    val classLoader: ClassLoader
 ) {
     
     fun getReflectionClass(): Class<*> {
