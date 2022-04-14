@@ -22,6 +22,13 @@ class PacketCommonUpdateModules: Packet() {
             }
         }
         data.putList(dataWriters)
+//        val tester = PacketCommonUpdateModules()
+//        tester.read(FriendlyByteBuffer(data.getArray()))
+//        for (moduleZip in tester.modules.zip(modules)) {
+//            for (setting in moduleZip.first.settings.zip(moduleZip.second.settings)) {
+//                println("From ${setting.first.value} to ${setting.second.value}")
+//            }
+//        }
     }
 
 

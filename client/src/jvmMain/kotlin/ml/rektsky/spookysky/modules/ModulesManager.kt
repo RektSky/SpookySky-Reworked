@@ -75,7 +75,11 @@ object ModulesManager {
                     val remote: AbstractSetting<Any, *> = localRemoteSetting.second as AbstractSetting<Any, *>
                     local.value = remote.value
                 }
-                WebGui.broadcastPacket(PacketCommonUpdateModules().apply { modules = ArrayList(listOf(localModule.copy())) })
+                for (connectedClient in WebGui.getConnectedClients()) {
+//                    if (connectedClient == event.sender) continue
+                    connectedClient.send(PacketCommonUpdateModules().apply { modules = ArrayList(listOf(localModule.copy())) })
+
+                }
             }
         }
     }

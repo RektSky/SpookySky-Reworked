@@ -85,18 +85,19 @@ object NetworkManager {
         TerminalHandler.handlePacket(packet)
         if (packet is PacketCommonUpdateModules) {
             for (module in packet.modules) {
-                val targetModule: AbstractModule? = modules.firstOrNull { module.name == it.name }
+                val targetModule: AbstractModule? = this.modules.firstOrNull { module.name == it.name }
                 if (targetModule != null) {
-                    modules.remove(targetModule)
-                    modules.add(module.copy())
+                    val oldIndex = this.modules.indexOf(targetModule)
+                    this.modules.remove(targetModule)
+                    this.modules.add(oldIndex, module.copy())
                     debug("[ModulesManager] Updated module: ${module.name}")
                 } else {
-                    modules.add(module.copy())
+                    this.modules.add(module.copy())
                     debug("[ModulesManager] Registered module: ${module.name}")
                 }
             }
             resetCache()
-            for (abstractModule in modules.filter { m -> m.category == Main.currentCategory }) {
+            for (abstractModule in this.modules.filter { m -> m.category == Main.currentCategory }) {
                 Renderer.updateModuleDisplay(abstractModule)
             }
         }

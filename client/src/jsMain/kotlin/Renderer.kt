@@ -3,6 +3,8 @@ import kotlinx.html.dom.create
 import kotlinx.html.js.*
 import kotlinx.html.*
 import ml.rektsky.spookysky.module.AbstractModule
+import ml.rektsky.spookysky.module.settings.impl.NumberSetting
+import ml.rektsky.spookysky.packets.impl.PacketCommonTextMessage
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.asList
 import org.w3c.dom.get
@@ -59,7 +61,6 @@ object Renderer {
     }
 
     fun updateModuleDisplay(module: AbstractModule) {
-        println("FINDING!")
         var htmlDivElement = renderedElements[module.name]
         if (htmlDivElement == null) {
             renderedElements[module.name] = getModuleDisplay(module)
@@ -71,7 +72,6 @@ object Renderer {
             htmlDivElement.remove()
             renderedElements[module.name] = newDisplay
             getModulesElement().append(newDisplay)
-            println("FOUND!")
         }
 
     }

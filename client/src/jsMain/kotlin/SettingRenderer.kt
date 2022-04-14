@@ -46,10 +46,11 @@ object SettingRenderer {
          return document.create.div("setting") {
             p { +setting.name }
             input(InputType.range, classes = "setting-input number-setting") {
-                value = setting.value.toString()
+                println("Value: ${setting.value.toString()}")
                 min = setting.min.toString()
                 max = setting.max.toString()
                 step = setting.step.toString()
+                value = setting.value.toString()
             }
             attributes["setting-name"] = setting.name
         }.apply {

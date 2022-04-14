@@ -20,8 +20,8 @@ class AutoClicker: Module(
     Category.COMBAT
 ) {
 
-    val cpsMinSetting: NumberSetting = NumberSetting("CPS Min", 10, 0.1, 1, 40)
-    val cpsMaxSetting: NumberSetting = NumberSetting("CPS Max", 10, 0.1, 1, 40)
+    val cpsMinSetting: NumberSetting = NumberSetting("CPS Min", 8.0, 0.1, 1.0, 40.0)
+    val cpsMaxSetting: NumberSetting = NumberSetting("CPS Max", 12.0, 0.1, 1.0, 40.0)
 
     private var cps = 0.0
     private var isClicked = false

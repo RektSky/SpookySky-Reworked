@@ -4,7 +4,7 @@ import ml.rektsky.spookysky.mapping.mappings.world.World
 import kotlin.reflect.KProperty
 
 class FieldMappingDelegation<R>(
-    val original: Any,
+    val original: Any?,
     val mapping: FieldMapping,
     val wrapperFunction: (Any) -> R? = { it as R },
     val reversedWrapperFunction: (R) -> Any = { it as Any }
@@ -17,7 +17,11 @@ class FieldMappingDelegation<R>(
     }
 
     operator fun setValue(instance: Any, property: KProperty<*>, value: R) {
-        mapping.getReflectiveField()?.set(original, reversedWrapperFunction(value))
+        if (value == null) {
+            mapping.getReflectiveField()?.set(original, null)
+        } else {
+            mapping.getReflectiveField()?.set(original, reversedWrapperFunction(value))
+        }
     }
 
 
