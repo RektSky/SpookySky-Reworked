@@ -23,7 +23,7 @@ abstract class ClassMapping(
 
     fun getReflectiveClass(): Class<*>? {
         return if (mapped == null) null else
-            Class.forName(mapped!!.classNode.name.replace("/", "."))
+            mapped!!.getReflectionClass()
     }
 
 }

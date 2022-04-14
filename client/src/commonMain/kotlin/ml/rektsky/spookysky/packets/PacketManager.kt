@@ -45,7 +45,7 @@ object PacketManager {
     }
 
     fun write(packet: Packet): String {
-        val data = FriendlyByteBuffer(ByteArray(8192))
+        val data = FriendlyByteBuffer(ByteArray(81920))
         val packetId = packet::class.simpleName.hashCode()
         if (registered[packetId] == null) {
             throw IllegalArgumentException("Cannot send unregistered packet!")

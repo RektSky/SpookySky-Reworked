@@ -39,29 +39,31 @@ class AutoClicker: Module(
 
     @EventHandler
     fun onUpdateMouse(event: Render2DEvent) {
-        if (cpsResetTimer.checkAndReset(1000)) {
-            cps = Random(System.currentTimeMillis()).nextDouble(max(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble()) - min(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble()))+
+        if (cpsResetTimer.checkAndReset(100)) {
+            val range = max(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble()) -
                     min(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble())
-            Client.debug(cps.toString())
+            cps = (if(range != 0.0) Random(System.currentTimeMillis()).nextDouble(range)  else 0.0) +
+                    min(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble())
         }
-        if (timer.checkAndReset((500 / cps).toLong())) {
+        if (timer.checkAndReset((500 / cps).toLong())
+            && Mouse.getReflectiveClass()!!.getDeclaredMethod("isButtonDown", Int::class.java).invoke(null, 0) as Boolean) {
             click()
         }
     }
 
     fun click() {
-//        val bufferField: Field = Mouse.mapped!!.getReflectionClass().getDeclaredField("readBuffer")
-//        bufferField.isAccessible = true
-//        val buffer = bufferField[null] as ByteBuffer
-//        val newBuffer = ByteBuffer.allocate(1100)
-//        newBuffer.put(buffer)
-//        isClicked = !isClicked
-//        if (isClicked) {
-//            addToBuffer(newBuffer, 0, 1, 0, 0, 0)
-//        } else {
-//            addToBuffer(newBuffer, 0, 0, 0, 0, 0)
-//        }
-//        bufferField[null] = newBuffer
+        val bufferField: Field = Mouse.mapped!!.getReflectionClass().getDeclaredField("readBuffer")
+        bufferField.isAccessible = true
+        val buffer = bufferField[null] as ByteBuffer
+        val newBuffer = ByteBuffer.allocate(1100)
+        newBuffer.put(buffer)
+        isClicked = !isClicked
+        if (isClicked) {
+            addToBuffer(newBuffer, 0, 1, 0, 0, 0)
+        } else {
+            addToBuffer(newBuffer, 0, 0, 0, 0, 0)
+        }
+        bufferField[null] = newBuffer
         Minecraft.getMinecraft()?.clickMouse()
     }
 

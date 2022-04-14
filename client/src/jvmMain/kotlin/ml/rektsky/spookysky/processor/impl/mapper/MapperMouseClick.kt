@@ -1,6 +1,6 @@
 package ml.rektsky.spookysky.processor.impl.mapper
 
-import ml.rektsky.spookysky.mapping.mappings.Minecraft
+import ml.rektsky.spookysky.mapping.mappings.MapMinecraft
 import ml.rektsky.spookysky.processor.LoadedClass
 import ml.rektsky.spookysky.processor.Processor
 import ml.rektsky.spookysky.utils.MappingUtils
@@ -12,17 +12,17 @@ const val magicString = "Null returned as 'hitResult', this shouldn't happen!"
 class PLeftRightClickMapper: Processor() {
 
     init {
-        dependsOn(Minecraft)
+        dependsOn(MapMinecraft)
     }
 
     override fun shouldProcess(loadedClass: LoadedClass): Boolean {
-        return loadedClass == Minecraft.mapped
+        return loadedClass == MapMinecraft.mapped
     }
 
     override fun process0(loadedClass: LoadedClass) {
-        val mapped = Minecraft.mapped!!
+        val mapped = MapMinecraft.mapped!!
         for (method in loadedClass.classNode.methods) {
-            if (MappingUtils.hasString(method, magicString)) {
+            if (MappingUtils.hasString(magicString, method)) {
                 var hasFour = false
                 for (instruction in method.instructions) {
                     if (instruction is InsnNode && instruction.opcode == Opcodes.ICONST_4) {
@@ -30,15 +30,15 @@ class PLeftRightClickMapper: Processor() {
                     }
                 }
                 if (hasFour) {
-                    Minecraft.mapRightClickMouse.mapped = method
+                    MapMinecraft.mapRightClickMouse.mapped = method
                 } else {
-                    Minecraft.mapClickMouse.mapped = method
+                    MapMinecraft.mapClickMouse.mapped = method
                 }
             }
         }
     }
 
     override fun jobDone(): Boolean {
-        return Minecraft.mapClickMouse.isMapped() && Minecraft.mapRightClickMouse.isMapped()
+        return MapMinecraft.mapClickMouse.isMapped() && MapMinecraft.mapRightClickMouse.isMapped()
     }
 }

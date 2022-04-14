@@ -10,9 +10,14 @@ open class MethodMapping(
 ): Mapping<MethodNode>(userFriendlyName) {
 
     fun getReflectiveMethod(): Method? {
-        return if (mapped == null) null else
-            parent.getReflectiveClass()!!.getDeclaredMethod(mapped!!.name,
-                *DescriptorUtil.getParameterTypes(mapped!!.desc).toTypedArray())
+        return if (mapped == null) null else {
+            val declaredMethod = parent.getReflectiveClass()!!.getDeclaredMethod(
+                mapped!!.name,
+                *DescriptorUtil.getParameterTypes(mapped!!.desc).toTypedArray()
+            )
+            declaredMethod.isAccessible = true
+            declaredMethod
+        }
     }
 
 }

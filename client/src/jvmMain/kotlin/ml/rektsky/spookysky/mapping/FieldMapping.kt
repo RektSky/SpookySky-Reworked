@@ -15,7 +15,11 @@ open class FieldMapping(
 
 
     fun getReflectiveField(): Field? {
-        return if (mapped == null) null else parent.getReflectiveClass()!!.getDeclaredField(mapped!!.name)
+        return if (mapped == null) null else {
+            val declaredField = parent.getReflectiveClass()!!.getDeclaredField(mapped!!.name)
+            declaredField.isAccessible = true
+            declaredField
+        }
     }
 
 }

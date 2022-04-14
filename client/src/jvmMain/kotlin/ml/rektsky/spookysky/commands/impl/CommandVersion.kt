@@ -2,6 +2,7 @@ package ml.rektsky.spookysky.commands.impl
 
 import ml.rektsky.spookysky.commands.Command
 import ml.rektsky.spookysky.mapping.mappings.ClientBrandRetriever
+import ml.rektsky.spookysky.mapping.mappings.MapClientBrandRetriever
 import ml.rektsky.spookysky.webgui.WebGuiInstance
 
 class CommandVersion: Command(

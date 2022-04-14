@@ -19,6 +19,8 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.concurrent.withLock
 
+val initTime = System.currentTimeMillis()
+
 class CustomClassDef(
     val loadedClass: LoadedClass
 ) {
@@ -32,6 +34,7 @@ class CustomClassDef(
     }
 
     fun execute(): Boolean {
+        if (System.currentTimeMillis() - initTime < 10000) return false
         try {
             val clazz = getReflectiveClass()
             if (clazz == null) return false
@@ -132,7 +135,11 @@ abstract class Processor {
                         continue
                     }
                     if (shouldProcess(processQueue.first())) {
-                        process0(processQueue.removeFirst())
+                        try {
+                            process0(processQueue.removeFirst())
+                        } catch (e: Throwable) {
+                            Client.error(e)
+                        }
                     } else {
                         processQueue.removeFirst()
                     }
@@ -212,7 +219,11 @@ abstract class Processor {
             }
         }
         if (shouldProcess(node)) {
-            process0(node)
+            try {
+                process0(node)
+            } catch (e: Throwable) {
+                Client.error(e)
+            }
         }
     }
 

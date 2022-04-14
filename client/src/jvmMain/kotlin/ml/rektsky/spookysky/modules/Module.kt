@@ -2,6 +2,7 @@ package ml.rektsky.spookysky.modules
 
 import ml.rektsky.spookysky.events.EventsManager
 import ml.rektsky.spookysky.events.impl.client.PreModuleToggleEvent
+import ml.rektsky.spookysky.mapping.mappings.Minecraft
 import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.module.Category
 import ml.rektsky.spookysky.module.settings.AbstractSetting
@@ -14,6 +15,8 @@ abstract class Module(
     override var category: Category,
 ): AbstractModule() {
 
+    val mc: Minecraft?
+        get() = Minecraft.getMinecraft()
 
     val keyBind: KeybindSetting = KeybindSetting("KeyBind")
 

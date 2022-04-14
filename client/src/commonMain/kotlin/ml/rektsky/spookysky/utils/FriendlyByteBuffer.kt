@@ -97,7 +97,7 @@ class FriendlyByteBuffer(
     fun putList(list: List<(buffer: FriendlyByteBuffer) -> Unit>) {
         putInt(list.size)
         for (content in list) {
-            val input = FriendlyByteBuffer(ByteArray(8192))
+            val input = FriendlyByteBuffer(ByteArray(81920))
             content(input)
             val out = input.getArray()
             putInt(out.size)

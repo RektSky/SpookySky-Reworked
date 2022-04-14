@@ -34,7 +34,7 @@ object WebGui {
             log.add(Message(message, color))
         }
         for (value in getConnectedClients()) {
-            value.sendMessage(message)
+            value.sendMessage(message, color)
         }
     }
 

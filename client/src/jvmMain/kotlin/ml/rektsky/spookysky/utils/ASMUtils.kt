@@ -3,6 +3,7 @@ package ml.rektsky.spookysky.utils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FieldNode
 
 object ASMUtils {
 
@@ -21,14 +22,7 @@ object ASMUtils {
 
 }
 
-fun Any.getClassName(): String {
-    return javaClass.name
-}
 
-fun Any.getDescriptorName(): String {
-    return javaClass.name.replace(".", "/")
-}
-
-fun Any.getBytecodeName(): String {
-    return DescriptorUtil.toDescriptorTypeName(javaClass.name)
+fun ClassNode.getFieldByName(name: String): FieldNode? {
+    return this.fields.firstOrNull { it.name == name }
 }

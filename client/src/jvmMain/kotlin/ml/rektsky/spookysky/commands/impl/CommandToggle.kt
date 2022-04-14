@@ -11,7 +11,7 @@ class CommandToggle: Command("toggle", "Toggle a module", "toggle <Module Name>"
             return false
         }
         val module = ModulesManager.getRegisteredModules()
-            .firstOrNull { println(it.name + " / " + args[0] + " / " + (it.name.equals(args[0], true))); it.name.equals(args[0], true)}
+            .firstOrNull { it.name.equals(args[0], true)}
         if (module == null) {
             sender.sendMessage("Module not found!", ChatColor.RED)
             return true
