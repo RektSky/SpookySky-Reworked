@@ -78,11 +78,14 @@ object Main {
             }
             println("Command Line: ${MonitoredVmUtil.commandLine(vm)}")
             println("Found Minecraft! Killing it...")
-            val cwdRetriever = Runtime.getRuntime().exec("readlink -e /proc/$pid/cwd")
             var workingDir: File? = null
             if (windowsFlag) {
+                val cwdRetriever = Runtime.getRuntime().exec("readlink -e /proc/$pid/cwd")
+                workingDir = File(cwdRetriever.inputStream.readBytes().toString(Charset.defaultCharset()).split("\n")[0])
+                // TODO: Windows support
                 Runtime.getRuntime().exec("TASKKILL /F /PID $pid").waitFor()
             } else {
+                val cwdRetriever = Runtime.getRuntime().exec("readlink -e /proc/$pid/cwd")
                 workingDir = File(cwdRetriever.inputStream.readBytes().toString(Charset.defaultCharset()).split("\n")[0])
                 Runtime.getRuntime().exec("kill -9 $pid").waitFor()
             }
