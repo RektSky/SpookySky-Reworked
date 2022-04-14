@@ -194,6 +194,10 @@ object TerminalHandler {
                 autoCompleteSelection = ""
                 suggestionsElement.hidden = true
             }
+            if (Date.now() - autoScrollTime < 100) {
+                terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
+
+            }
         })
 
 
@@ -285,7 +289,7 @@ object TerminalHandler {
         val message = message.replace("%BASE_URL%", "http://" + window.location.host)
         var scroll = (terminalElement.scrollTop + terminalElement.offsetHeight) >= (terminalElement.scrollHeight)
         terminalElement.append(*createLine(message, color))
-        if (scroll || Date.now() - autoScrollTime < 100) {
+        if (scroll) {
             terminalElement.scroll(ScrollToOptions(top = terminalElement.scrollHeight.toDouble(), behavior = ScrollBehavior.INSTANT))
         }
     }
