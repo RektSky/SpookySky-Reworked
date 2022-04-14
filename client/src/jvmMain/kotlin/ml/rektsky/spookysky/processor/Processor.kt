@@ -173,15 +173,19 @@ abstract class Processor {
 
     protected fun scheduleClassLoadAction(name: String, action: (loadedClass: LoadedClass) -> Unit) {
         val name = name.replace(".", "/")
-        if (name in scheduledClassLoadActions.keys) {
-            throw IllegalStateException("Class load action has been scheduled already! Class name: ${name}")
+        var original = scheduledClassLoadActions[name]
+        if (original == null) {
+            original = {}
         }
         val loadedClass = ProcessorManager.getClasses()[name]
         if (loadedClass != null) {
             action(loadedClass)
             return
         }
-        scheduledClassLoadActions[name] = action
+        scheduledClassLoadActions[name] = {
+            original(it)
+            action(it)
+        }
     }
 
     protected fun requestRedefineClass(classNode: ClassNode) {

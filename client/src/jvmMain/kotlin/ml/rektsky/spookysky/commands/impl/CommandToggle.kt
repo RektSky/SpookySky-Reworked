@@ -2,7 +2,9 @@ package ml.rektsky.spookysky.commands.impl
 
 import ml.rektsky.spookysky.commands.Command
 import ml.rektsky.spookysky.modules.ModulesManager
+import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
 import ml.rektsky.spookysky.utils.ChatColor
+import ml.rektsky.spookysky.webgui.WebGui
 import ml.rektsky.spookysky.webgui.WebGuiInstance
 
 class CommandToggle: Command("toggle", "Toggle a module", "toggle <Module Name>") {
@@ -17,6 +19,7 @@ class CommandToggle: Command("toggle", "Toggle a module", "toggle <Module Name>"
             return true
         }
         module.toggled = !module.toggled
+        WebGui.broadcastPacket(PacketCommonUpdateModules().apply { modules = ArrayList(listOf(module.copy())) })
         if (module.toggled) {
             sender.sendMessage("${module.name} has been enabled!", ChatColor.GREEN)
         } else {

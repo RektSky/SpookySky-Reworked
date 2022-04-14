@@ -7,7 +7,9 @@ import ml.rektsky.spookysky.processor.ProcessorManager
 import ml.rektsky.spookysky.utils.ChatColor
 import ml.rektsky.spookysky.utils.CustomJvmSelfAttach
 import ml.rektsky.spookysky.webgui.WebGui
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintWriter
 import java.lang.instrument.Instrumentation
 import java.net.Socket
 var webGuiOnly = false
@@ -74,8 +76,10 @@ object Client {
     }
 
     fun error(e: Throwable) {
-        for (connectedClient in WebGui.getConnectedClients()) {
-            connectedClient.send(e)
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        e.printStackTrace(PrintWriter(byteArrayOutputStream, true))
+        for (s in String(byteArrayOutputStream.toByteArray()).split("\n")) {
+            WebGui.message("[ERROR] " + s, ChatColor.RED, true)
         }
     }
 

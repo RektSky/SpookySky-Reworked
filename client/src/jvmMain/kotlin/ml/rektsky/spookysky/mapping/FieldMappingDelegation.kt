@@ -1,5 +1,6 @@
 package ml.rektsky.spookysky.mapping
 
+import ml.rektsky.spookysky.mapping.mappings.world.World
 import kotlin.reflect.KProperty
 
 class FieldMappingDelegation<R>(

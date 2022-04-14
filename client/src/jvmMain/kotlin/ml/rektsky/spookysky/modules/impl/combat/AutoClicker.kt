@@ -46,7 +46,7 @@ class AutoClicker: Module(
                     min(cpsMinSetting.value!!.toDouble(), cpsMaxSetting.value!!.toDouble())
         }
         if (timer.checkAndReset((500 / cps).toLong())
-            && Mouse.getReflectiveClass()!!.getDeclaredMethod("isButtonDown", Int::class.java).invoke(null, 0) as Boolean) {
+            && Mouse.isButtonDown(0)) {
             click()
         }
     }

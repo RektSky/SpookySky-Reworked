@@ -7,6 +7,22 @@ object DescriptorUtil {
         return s
     }
 
+    fun getParameterTypeNames(descriptor: String): List<String> {
+        val out = ArrayList<String>()
+        var buffer = ""
+        for (c in descriptor) {
+            if (c == ')') return out
+            if (c == '(') continue
+            buffer += c
+            val descriptorToClass = descriptorToClassName(buffer)
+            if (descriptorToClass != null) {
+                out.add(descriptorToClass)
+                buffer = ""
+            }
+        }
+        return out
+    }
+
     fun getParameterTypes(descriptor: String): List<Class<*>> {
         val out = ArrayList<Class<*>>()
         var buffer = ""
@@ -21,6 +37,25 @@ object DescriptorUtil {
             }
         }
         return out
+    }
+
+    fun descriptorToClassName(s: String): String? {
+        var type: Class<*>? = null
+        when (s) {
+            "Z" -> return "Z"
+            "C" -> return "C"
+            "B" -> return "B"
+            "S" -> return "S"
+            "I" -> return "I"
+            "J" -> return "J"
+            "F" -> return "F"
+            "D" -> return "D"
+            "V" -> return "V"
+        }
+        if (s.startsWith("L") && s.endsWith(";")) {
+            return "L" + s.substring(1, s.length - 1) + ";"
+        }
+        return null
     }
 
     fun descriptorToClass(s: String): Class<*>? {

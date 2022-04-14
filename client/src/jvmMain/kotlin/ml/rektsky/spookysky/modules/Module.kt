@@ -7,6 +7,8 @@ import ml.rektsky.spookysky.module.AbstractModule
 import ml.rektsky.spookysky.module.Category
 import ml.rektsky.spookysky.module.settings.AbstractSetting
 import ml.rektsky.spookysky.module.settings.impl.KeybindSetting
+import ml.rektsky.spookysky.packets.impl.PacketCommonUpdateModules
+import ml.rektsky.spookysky.webgui.WebGui
 
 
 abstract class Module(
@@ -24,6 +26,7 @@ abstract class Module(
 
     override var toggled = false
         set(value) {
+            WebGui.broadcastPacket(PacketCommonUpdateModules().apply { this.modules = ArrayList(listOf(copy())) })
             PreModuleToggleEvent(this, !field, value).callEvent()
             field = value
             if (value) {

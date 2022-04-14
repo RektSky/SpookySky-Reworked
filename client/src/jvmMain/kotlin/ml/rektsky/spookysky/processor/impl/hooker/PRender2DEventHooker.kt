@@ -2,8 +2,8 @@ package ml.rektsky.spookysky.processor.impl.hooker
 
 import ml.rektsky.spookysky.events.Event
 import ml.rektsky.spookysky.events.impl.game.Render2DEvent
-import ml.rektsky.spookysky.mapping.mappings.gui.MapGuiIngame
-import ml.rektsky.spookysky.mapping.mappings.rendering.MapScaledResolution
+import ml.rektsky.spookysky.mapping.mappings.gui.GuiIngame
+import ml.rektsky.spookysky.mapping.mappings.rendering.ScaledResolution
 import ml.rektsky.spookysky.processor.LoadedClass
 import ml.rektsky.spookysky.processor.Processor
 import org.objectweb.asm.tree.InsnList
@@ -12,24 +12,24 @@ import org.objectweb.asm.tree.MethodInsnNode
 class PRender2DEventHooker: Processor() {
 
     init {
-        dependsOn(MapGuiIngame)
-        dependsOn(MapGuiIngame.mapRenderGameOverlay)
-        dependsOn(MapScaledResolution)
+        dependsOn(GuiIngame)
+        dependsOn(GuiIngame.mapRenderGameOverlay)
+        dependsOn(ScaledResolution)
     }
 
     var done = false
 
     override fun shouldProcess(loadedClass: LoadedClass): Boolean {
-        return loadedClass.classNode == MapGuiIngame.mapped?.classNode
+        return loadedClass.classNode == GuiIngame.mapped?.classNode
     }
 
     override fun process0(loadedClass: LoadedClass) {
         var found = 0
         val out = InsnList()
-        for (instruction in MapGuiIngame.mapRenderGameOverlay.mapped!!.instructions) {
+        for (instruction in GuiIngame.mapRenderGameOverlay.mapped!!.instructions) {
             out.add(instruction)
             if (instruction is MethodInsnNode) {
-                if (instruction.desc == "(L${MapScaledResolution.mapped!!.classNode.name};F)V") {
+                if (instruction.desc == "(L${ScaledResolution.mapped!!.classNode.name};F)V") {
                     found++
                 }
                 if (found == 2) {
@@ -41,9 +41,9 @@ class PRender2DEventHooker: Processor() {
             }
         }
 
-        MapGuiIngame.mapRenderGameOverlay.mapped!!.instructions = out
+        GuiIngame.mapRenderGameOverlay.mapped!!.instructions = out
 
-        requestRedefineClass(MapGuiIngame.mapped!!.classNode)
+        requestRedefineClass(GuiIngame.mapped!!.classNode)
     }
 
     override fun jobDone(): Boolean {

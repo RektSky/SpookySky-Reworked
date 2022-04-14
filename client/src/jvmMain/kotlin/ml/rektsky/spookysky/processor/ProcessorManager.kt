@@ -33,6 +33,7 @@ object ProcessorManager {
     }
     init {
         for (clazz in ClassUtils.resolvePackage(javaClass.`package`.name, Processor::class.java)) {
+            if (Modifier.isAbstract(clazz.modifiers)) continue
             Client.debug("[ProcessorManager] Registered processor: ${clazz.simpleName}")
             val element = clazz.newInstance()
             processors.add(element)

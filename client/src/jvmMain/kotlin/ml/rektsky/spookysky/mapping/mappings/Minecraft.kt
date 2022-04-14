@@ -5,6 +5,7 @@ import ml.rektsky.spookysky.mapping.FieldMapping
 import ml.rektsky.spookysky.mapping.FieldMappingDelegation
 import ml.rektsky.spookysky.mapping.MethodMapping
 import ml.rektsky.spookysky.mapping.mappings.settings.GameSettings
+import ml.rektsky.spookysky.mapping.mappings.world.World
 
 object MapMinecraft: ClassMapping("Minecraft") {
 
@@ -16,6 +17,7 @@ object MapMinecraft: ClassMapping("Minecraft") {
     val mapRightClickMouse = MethodMapping(this, "rightClickMouse")
 
     val mapGameSettings = FieldMapping(this, "gameSettings")
+    val mapTheWorld = FieldMapping(this, "theWorld")
 
 }
 
@@ -35,6 +37,10 @@ class Minecraft(val original: Any) {
 
     val gameSettings: GameSettings?
         by FieldMappingDelegation(original, MapMinecraft.mapGameSettings, { GameSettings(it) }, { it.original })
+
+    val theWorld: World?
+            by FieldMappingDelegation(original, MapMinecraft.mapTheWorld, { World(it) }, { it.original })
+
 
     companion object {
         fun getMinecraft(): Minecraft? {

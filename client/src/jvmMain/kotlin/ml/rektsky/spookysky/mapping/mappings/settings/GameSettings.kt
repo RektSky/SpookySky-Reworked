@@ -1,6 +1,5 @@
 package ml.rektsky.spookysky.mapping.mappings.settings
 
-import ml.rektsky.spookysky.Client
 import ml.rektsky.spookysky.mapping.ClassMapping
 import ml.rektsky.spookysky.mapping.FieldMapping
 
